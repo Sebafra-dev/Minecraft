@@ -1,2 +1,2 @@
-﻿using var game = new Minecraft.Game1();
+﻿using var game = new Minecraft.GameMain();
 game.Run();

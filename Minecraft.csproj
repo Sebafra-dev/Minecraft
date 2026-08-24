@@ -12,9 +12,9 @@
     <ApplicationIcon>Icon.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="MonoGame.Framework.Native" Version="3.8.5" />
-    <PackageReference Include="MonoGame.Runtime.Windows.DX12" Version="3.8.5" />
-    <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.*" />
+    <PackageReference Include="MonoGame.Framework.Native" Version="3.8.5.1" />
+    <PackageReference Include="MonoGame.Runtime.Windows.DX12" Version="3.8.5.1" />
+    <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.5.1" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Content\Images\" />
