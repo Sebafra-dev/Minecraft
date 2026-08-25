@@ -80,6 +80,8 @@ namespace Minecraft.Source
             );
         }
 
+        public Vector3 GetCameraPos() => _cameraPosition;
+
         public Matrix GetView()
         {
             return _matrix;

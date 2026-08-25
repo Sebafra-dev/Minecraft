@@ -4,13 +4,13 @@ namespace Minecraft.Source
 {
     public class FrameCounter
     {
-        private readonly FpsCounter drawFps;
-        private readonly FpsCounter updateFps;
+        private readonly FpsCounter _drawFps;
+        private readonly FpsCounter _updateFps;
 
         public FrameCounter()
         {
-            drawFps = new FpsCounter();
-            updateFps = new FpsCounter();
+            _drawFps = new FpsCounter();
+            _updateFps = new FpsCounter();
         }
 
         private class FpsCounter
@@ -35,16 +35,16 @@ namespace Minecraft.Source
 
         public void OnUpdate(GameTime gameTime)
         {
-            updateFps.OnUpdateCounter(gameTime);
+            _updateFps.OnUpdateCounter(gameTime);
         }
 
         public void OnDraw(GameTime gameTime)
         {
-            drawFps.OnUpdateCounter(gameTime);
+            _drawFps.OnUpdateCounter(gameTime);
         }
 
-        public int GetUpdateFps() => updateFps.RetCount;
+        public int GetUpdateFps() => _updateFps.RetCount;
 
-        public int GetDrawFps() => drawFps.RetCount;
+        public int GetDrawFps() => _drawFps.RetCount;
     }
 }

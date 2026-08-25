@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Minecraft.Source.UI;
 
 namespace Minecraft.Source
 {
@@ -10,6 +11,8 @@ namespace Minecraft.Source
         private static SpriteFont _font;
         private static Camera _camera;
         private static Texture2D _texture;
+        private static Map _map;
+        private static HUD _hud;
 
         public readonly static int SEC_TO_MS = 1000;
 
@@ -18,6 +21,8 @@ namespace Minecraft.Source
         public static SpriteFont GetFont() => _font;
         public static Camera GetCamera() => _camera;
         public static Texture2D GetTexture() => _texture;
+        public static Map GetMap() => _map;
+        public static HUD GetHud() => _hud;
 
         public static void SetGraphics(GraphicsDeviceManager graphics)
         {
@@ -42,6 +47,16 @@ namespace Minecraft.Source
         public static void SetTexture(Texture2D texture)
         {
             _texture = texture;
+        }
+
+        public static void SetMap(Map map)
+        {
+            _map = map;
+        }
+
+        public static void SetHud(HUD hud)
+        {
+            _hud = hud;
         }
     }
 }

@@ -2,9 +2,15 @@
 {
     public class HUD : UIElement
     {
+        private readonly DebugInfo _debugInfo;
         public HUD(FrameCounter frameCounter) : base(new(0, 0))
         {
-            AddChild(new DebugInfo(frameCounter));
+            AddChild(_debugInfo = new DebugInfo(frameCounter));
+        }
+
+        public void OnBlockData(int blocks, int vertices)
+        {
+            _debugInfo.OnBlockData(blocks, vertices);
         }
 
         public override void Update()

@@ -19,5 +19,6 @@
   <ItemGroup>
     <Folder Include="Content\Images\" />
     <Folder Include="Content\Fonts\" />
+    <Folder Include="Source\Physics\" />
   </ItemGroup>
 </Project>

@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Minecraft.Source;
 using Minecraft.Source.UI;
-using System;
 
 namespace Minecraft
 {
@@ -39,11 +38,10 @@ namespace Minecraft
         {
             var graphicsDevice = Globals.GetGraphics().GraphicsDevice;
 
-            _frameCounter = new FrameCounter();
-            _hud = new HUD(_frameCounter);
-            _map = new Map();
-
+            Globals.SetHud(_hud = new HUD(_frameCounter = new FrameCounter()));
+            Globals.SetMap(_map = new Map());
             Globals.SetCamera(_camera = new Camera());
+
             Mouse.SetPosition(graphicsDevice.Viewport.Width / 2, graphicsDevice.Viewport.Height / 2);
             IsMouseVisible = false;
 
@@ -66,8 +64,7 @@ namespace Minecraft
 
         protected override void Update(GameTime gameTime)
         {
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || 
-                Keyboard.GetState().IsKeyDown(Keys.Escape))
+            if (Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
             _camera.Update(gameTime);

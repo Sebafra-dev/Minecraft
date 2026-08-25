@@ -4,8 +4,11 @@ namespace Minecraft.Source
 {
     public static class Utils
     {
-        public static Vector2[] GetUV(int tileX, int tileY, int tileSize = 8, int atlasSize = 128)
+        public static Vector2[] GetUV(int tileId, int tileSize = 8, int atlasSize = 128)
         {
+            var tileX = tileId % 16;
+            var tileY = tileId / 16;
+
             float u1 = (float)(tileX * tileSize) / atlasSize;
             float v1 = (float)(tileY * tileSize) / atlasSize;
 
