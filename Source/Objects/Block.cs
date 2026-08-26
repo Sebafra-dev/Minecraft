@@ -2,7 +2,6 @@
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 
 namespace Minecraft.Source.Objects
 {
@@ -20,7 +19,8 @@ namespace Minecraft.Source.Objects
 
         public enum BlockType
         {
-            Grass
+            Grass,
+            Stone
         }
 
         private readonly BlockType _id;
@@ -92,6 +92,8 @@ namespace Minecraft.Source.Objects
             {
                 case BlockType.Grass:
                     return new(0, 1);
+                case BlockType.Stone:
+                    return new(2, 2);
                 default:
                     break;
             }

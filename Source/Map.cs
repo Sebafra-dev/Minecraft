@@ -1,7 +1,9 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Minecraft.Source.Objects;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using static Minecraft.Source.Objects.Block;
 
@@ -11,12 +13,7 @@ namespace Minecraft.Source
     {
         private readonly BasicEffect _effect;
 
-        private const int WIDTH = 32;
-        private const int HEIGHT = 32;
-        private const int DEPTH = 32;
-
-
-        private bool[,,] _blockMap;
+        private readonly Dictionary<(short, short), Chunk> _chunks;
         private readonly List<Block> _blocks;
         private readonly List<VertexPositionTexture> _vertices;
         private readonly List<int> _indices;
@@ -27,8 +24,6 @@ namespace Minecraft.Source
         {
             var graphicsDevice = Globals.GetGraphics().GraphicsDevice;
 
-            _blockMap = new bool[WIDTH, HEIGHT, DEPTH];
-
             _effect = new BasicEffect(graphicsDevice)
             {
                 TextureEnabled = true,
@@ -37,11 +32,14 @@ namespace Minecraft.Source
             };
 
             _blocks = [];
-            for (int x = -1; x < 2; x++)
-                for (int z = -1; z < 2; z++)
-                {
-                    AddBlockOnMap(BlockType.Grass, x, 0, z);
-                }
+            _chunks = [];
+
+            for (int x = -15; x < 15; x++)
+                for (int z = -15; z < 15; z++)
+                    for (int y = 0; y < 70; y++)
+                    {
+                        AddBlockOnMap(y > 65 ? BlockType.Grass : BlockType.Stone, x, y, z);
+                    }
 
             _vertices = [];
             _indices = [];
@@ -50,21 +48,35 @@ namespace Minecraft.Source
         ~Map()
         {
             _blocks.Clear();
-            _blockMap = null;
+            _chunks.Clear();
             _vertices.Clear();
             _indices.Clear();
         }
 
+        private static (short, short) GetChunkId(int x, int y, int z) => ((short)(x / Chunk.WIDTH), (short)(z / Chunk.DEPTH));
+
         public void AddBlockOnMap(BlockType blockType, int x, int y, int z)
         {
-            if (_blockMap[x + WIDTH / 2, y + HEIGHT / 2, z + DEPTH / 2])
+            var id = GetChunkId(x, y, z);
+
+            if (!_chunks.ContainsKey(id))
+                _chunks.Add(id, new Chunk());
+
+            if (IsBlock(x, y, z))
                 return;
 
-            _blocks.Add(new Block(blockType, x, y, z));
-            _blockMap[x + WIDTH / 2, y + HEIGHT / 2, z + DEPTH / 2] = true;
+            _chunks[id].AddBlockOnChunk(blockType, x, y, z);
         }
 
-        public bool IsBlock(int x, int y, int z) => _blockMap[x + WIDTH / 2, y + HEIGHT / 2, z + DEPTH / 2];
+        public bool IsBlock(int x, int y, int z)
+        {
+            var id = GetChunkId(x, y, z);
+
+            if (!_chunks.TryGetValue(id, out Chunk value))
+                return false;
+
+            return value.IsBlock(x.Mod(Chunk.WIDTH), y.Mod(Chunk.HEIGHT), z.Mod(Chunk.DEPTH));
+        }   
 
         public void Draw()
         {
@@ -80,6 +92,11 @@ namespace Minecraft.Source
             _effect.View = camera.GetView();
 
             graphicsDevice.SamplerStates[0] = SamplerState.PointClamp;
+
+            _blocks.Clear();
+
+            foreach (var chunk in _chunks.Values)
+                _blocks.AddRange(chunk.GetVisibleBlocks());
 
             var sortedBlocks = _blocks.OrderByDescending(_ => _.GetDist(camera.GetCameraPos()));
 
@@ -105,7 +122,7 @@ namespace Minecraft.Source
                 ids += vertices.Length;
             }
 
-            Globals.GetHud().OnBlockData(sortedBlocks.Count(), _vertices.Count);
+            Globals.GetHud().OnRenderData(_chunks.Count, _blocks.Count, _vertices.Count);
 
             foreach (EffectPass pass in _effect.CurrentTechnique.Passes)
             {

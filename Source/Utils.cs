@@ -23,5 +23,10 @@ namespace Minecraft.Source
                 new Vector2(u1, v2)
             ];
         }
+
+        public static int Mod(this int a, int b)
+        {
+            return (a % b + b) % b;
+        }
     }
 }

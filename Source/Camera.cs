@@ -4,7 +4,7 @@ namespace Minecraft.Source
 {
     public class Camera
     {
-        private Vector3 _cameraPosition = new(0, 0, 5);
+        private Vector3 _cameraPosition = new(0, 75, 0);
         private float _yaw = 0f;
         private float _pitch = 0f;
 
@@ -53,6 +53,8 @@ namespace Minecraft.Source
 
             if (keyboard.IsKeyDown(Keys.LeftControl))
                 _cameraPosition.Y -= _moveSpeed * deltaTime;
+
+            Globals.GetHud().OnPos(_cameraPosition);
 
             int mouseX = mouse.X - graphicsDevice.Viewport.Width / 2;
             int mouseY = mouse.Y - graphicsDevice.Viewport.Height / 2;

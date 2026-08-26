@@ -1,4 +1,6 @@
-﻿namespace Minecraft.Source.UI
+﻿using Microsoft.Xna.Framework;
+
+namespace Minecraft.Source.UI
 {
     public class HUD : UIElement
     {
@@ -8,9 +10,14 @@
             AddChild(_debugInfo = new DebugInfo(frameCounter));
         }
 
-        public void OnBlockData(int blocks, int vertices)
+        public void OnRenderData(int chunks, int blocks, int vertices)
         {
-            _debugInfo.OnBlockData(blocks, vertices);
+            _debugInfo.OnRenderData(chunks, blocks, vertices);
+        }
+
+        public void OnPos(Vector3 pos)
+        {
+            _debugInfo.OnPos(pos);
         }
 
         public override void Update()
