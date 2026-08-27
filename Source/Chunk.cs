@@ -13,28 +13,43 @@ namespace Minecraft.Source
 
         private bool[,,] _blockMap;
         private readonly List<Block> _blocks;
+        private readonly List<Block> _visibleBlocks;
 
         public Chunk()
         {
             _blockMap = new bool[WIDTH, HEIGHT, DEPTH];
             _blocks = [];
+            _visibleBlocks = [];
         }
 
         ~Chunk()
         {
             _blocks.Clear();
+            _visibleBlocks.Clear();
             _blockMap = null;
         }
 
-        public void AddBlockOnChunk(BlockType blockType, int x, int y, int z)
+        public void AddBlockOnChunk(BlockType blockType, int x, int y, int z, bool ignoreRefresh = true)
         {
             _blocks.Add(new Block(blockType, x, y, z));
             _blockMap[x.Mod(WIDTH), y.Mod(HEIGHT), z.Mod(DEPTH)] = true;
         }
 
+        public void RefreshVisibleBlocks()
+        {
+            _visibleBlocks.Clear();
+            foreach (var block in _blocks)
+            {
+                if (block.GetVertices().Length > 0)
+                {
+                    _visibleBlocks.Add(block);
+                }
+            }
+        }
+
         public List<Block> GetVisibleBlocks() 
         { 
-            return _blocks; 
+            return _visibleBlocks; 
         }
 
         public bool IsBlock(int x, int y, int z) => _blockMap[x, y, z];

@@ -10,9 +10,9 @@ namespace Minecraft.Source.UI
             AddChild(_debugInfo = new DebugInfo(frameCounter));
         }
 
-        public void OnRenderData(int chunks, int blocks, int vertices)
+        public void OnRenderData(int chunks, int visibleChunks, int blocks, int vertices)
         {
-            _debugInfo.OnRenderData(chunks, blocks, vertices);
+            _debugInfo.OnRenderData(chunks, visibleChunks, blocks, vertices);
         }
 
         public void OnPos(Vector3 pos)

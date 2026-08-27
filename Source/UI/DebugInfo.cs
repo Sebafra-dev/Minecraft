@@ -7,6 +7,7 @@ namespace Minecraft.Source.UI
     {
         private readonly FrameCounter _frameCounter;
         private int _chunks;
+        private int _visibleChunks;
         private int _blocks;
         private int _vertices;
 
@@ -26,9 +27,10 @@ namespace Minecraft.Source.UI
             AddChild(_textPos = new Text(new Vector2(0, 45), ""));
         }
 
-        public void OnRenderData(int chunks, int blocks, int vertices)
+        public void OnRenderData(int chunks, int visibleChunks, int blocks, int vertices)
         {
             _chunks = chunks;
+            _visibleChunks = visibleChunks;
             _blocks = blocks;
             _vertices = vertices;
         }
@@ -45,7 +47,7 @@ namespace Minecraft.Source.UI
                 
             _textDrawFps.SetText($"Draw FPS: {drawFps} (avg: {Math.Round(1000f / drawFps, 5)} ms)");
             _textUpdateFps.SetText($"Update FPS: {updateFps} (avg: {Math.Round(1000f / updateFps, 5)} ms)");
-            _textBlocks.SetText($"chunks: {_chunks} blocks: {_blocks} vertices: {_vertices}");
+            _textBlocks.SetText($"chunks: {_chunks} (visible: {_visibleChunks}) blocks: {_blocks} vertices: {_vertices}");
             _textPos.SetText($"x: {_pos.X} y: {_pos.Y} z: {_pos.Z}");
 
             base.Update();
