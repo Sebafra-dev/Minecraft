@@ -12,6 +12,7 @@ namespace Minecraft
         private HUD _hud;
         private Map _map;
 
+        private Controlling _controlling;
         private Camera _camera;
 
         public static GameMain Instance { get; private set; }
@@ -40,6 +41,7 @@ namespace Minecraft
 
             Globals.SetHud(_hud = new HUD(_frameCounter = new FrameCounter()));
             Globals.SetMap(_map = new Map());
+            Globals.SetControlling(_controlling = new Controlling());
             Globals.SetCamera(_camera = new Camera());
 
             Mouse.SetPosition(graphicsDevice.Viewport.Width / 2, graphicsDevice.Viewport.Height / 2);
@@ -67,7 +69,9 @@ namespace Minecraft
             if (Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
+            _controlling.Update(gameTime);
             _camera.Update(gameTime);
+            _map.Update(gameTime);
             _hud.Update();
 
             _frameCounter.OnUpdate(gameTime);

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Minecraft.Source.Objects;
 using Minecraft.Source.UI;
 
 namespace Minecraft.Source
@@ -13,6 +14,8 @@ namespace Minecraft.Source
         private static Texture2D _texture;
         private static Map _map;
         private static HUD _hud;
+        private static Player _player;
+        private static Controlling _controlling;
 
         public readonly static int SEC_TO_MS = 1000;
 
@@ -23,6 +26,8 @@ namespace Minecraft.Source
         public static Texture2D GetTexture() => _texture;
         public static Map GetMap() => _map;
         public static HUD GetHud() => _hud;
+        public static Player GetPlayer() => _player;
+        public static Controlling GetControlling() => _controlling;
 
         public static void SetGraphics(GraphicsDeviceManager graphics)
         {
@@ -57,6 +62,16 @@ namespace Minecraft.Source
         public static void SetHud(HUD hud)
         {
             _hud = hud;
+        }
+
+        public static void SetPlayer(Player player)
+        {
+            _player = player;
+        }
+
+        public static void SetControlling(Controlling controlling) 
+        { 
+            _controlling = controlling; 
         }
     }
 }

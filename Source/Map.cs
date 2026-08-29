@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework.Graphics;
 using Minecraft.Source.Objects;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using static Minecraft.Source.Objects.Block;
 
@@ -17,6 +16,7 @@ namespace Minecraft.Source
         private readonly List<Block> _visisbleBlocks;
         private readonly List<VertexPositionTexture> _vertices;
         private readonly List<int> _indices;
+        private readonly List<Entity> _entities;
 
         private bool _initialized = false;
 
@@ -28,14 +28,14 @@ namespace Minecraft.Source
             {
                 TextureEnabled = true,
                 World = Matrix.Identity,
-                Projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(60), graphicsDevice.Viewport.AspectRatio, 0.1f, 100f)
+                Projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(60), graphicsDevice.Viewport.AspectRatio, 0.1f, 1000f)
             };
 
             _visisbleBlocks = [];
             _chunks = [];
 
-            for (int x = -100; x < 100; x++)
-                for (int z = -100; z < 100; z++)
+            for (int x = -50; x < 50; x++)
+                for (int z = -50; z < 50; z++)
                     for (int y = 0; y < 70; y++)
                     {
                         AddBlockOnMap(y > 67 ? BlockType.Grass : BlockType.Stone, x, y, z);
@@ -43,6 +43,13 @@ namespace Minecraft.Source
 
             _vertices = [];
             _indices = [];
+
+            _entities = [];
+
+            var player = new Player();
+            player.SetPosition(0, 75, 0);
+            Globals.SetPlayer(player);
+            _entities.Add(player);
         }
 
         ~Map()
@@ -83,7 +90,7 @@ namespace Minecraft.Source
             return chunks;
         }
 
-        private static (short, short) GetChunkId(int x, int y, int z) => ((short)Math.Ceiling((float)x / Chunk.WIDTH), (short)Math.Ceiling((float)z / Chunk.DEPTH));
+        private static (short, short) GetChunkId(int x, int y, int z) => ((short)Math.Floor((float)x / Chunk.WIDTH), (short)Math.Floor((float)z / Chunk.DEPTH));
 
         public void AddBlockOnMap(BlockType blockType, int x, int y, int z)
         {
@@ -107,6 +114,14 @@ namespace Minecraft.Source
 
             return value.IsBlock(x.Mod(Chunk.WIDTH), y.Mod(Chunk.HEIGHT), z.Mod(Chunk.DEPTH));
         }   
+
+        public void Update(GameTime gameTime)
+        {
+            foreach (var entity in _entities)
+            {
+                entity.Update(gameTime);
+            }
+        }
 
         public void Draw()
         {
