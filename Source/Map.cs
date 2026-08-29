@@ -90,7 +90,7 @@ namespace Minecraft.Source
             return chunks;
         }
 
-        private static (short, short) GetChunkId(int x, int y, int z) => ((short)Math.Floor((float)x / Chunk.WIDTH), (short)Math.Floor((float)z / Chunk.DEPTH));
+        private static (short, short) GetChunkId(float x, float y, float z) => ((short)Math.Floor(x / Chunk.WIDTH), (short)Math.Floor(z / Chunk.DEPTH));
 
         public void AddBlockOnMap(BlockType blockType, int x, int y, int z)
         {
@@ -109,15 +109,30 @@ namespace Minecraft.Source
         {
             var id = GetChunkId(x, y, z);
 
-            if (!_chunks.TryGetValue(id, out Chunk value))
+            if (!_chunks.TryGetValue(id, out Chunk chunk))
                 return false;
 
-            return value.IsBlock(x.Mod(Chunk.WIDTH), y.Mod(Chunk.HEIGHT), z.Mod(Chunk.DEPTH));
-        }   
+            return chunk.IsBlock(x.Mod(Chunk.WIDTH), y.Mod(Chunk.HEIGHT), z.Mod(Chunk.DEPTH));
+        }
 
-        public void Update(GameTime gameTime)
+        public Chunk GetChunkOnPos(Vector3 pos)
         {
-            foreach (var entity in _entities)
+            var id = GetChunkId(pos.X, pos.Y, pos.Z);
+
+            if (!_chunks.TryGetValue(id, out Chunk chunk))
+                return null;
+
+            return chunk;
+        }
+
+        public Chunk GetChunkOnPos(float x, float y, float z)
+        {
+            return GetChunkOnPos(new(x, y, z));
+        }
+
+        public void Update(GameTime gameTime) //TODO update per active chunk not entire map
+        {
+            foreach (var entity in _entities) 
             {
                 entity.Update(gameTime);
             }

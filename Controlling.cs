@@ -11,9 +11,10 @@ namespace Minecraft
 
         private float _yaw = 0f;
         private float _pitch = 0f;
-        private readonly float _moveSpeed = 20f;
+        private readonly float _moveSpeed = 10f;
+        private readonly float _moveSpeedNoClip = 30f;
         private readonly float _mouseSensitivity = 0.002f;
-        private readonly bool _noClip = true;
+        private readonly bool _noClip = false;
 
         public Controlling()
         {
@@ -48,30 +49,59 @@ namespace Minecraft
             var camera = Globals.GetCamera();
             var player = Globals.GetPlayer();
 
+            var ctrl = _keyboardState.IsKeyDown(Keys.LeftControl);
+            var shift = _keyboardState.IsKeyDown(Keys.LeftShift);
+            var speedPerc = ctrl ? 0.75f : (shift ? 1.5f : 1f);
+
             if (_noClip)
             {
+                var f = forward * _moveSpeedNoClip * deltaTime * speedPerc;
+                var r = right * _moveSpeedNoClip * deltaTime * speedPerc;
+
                 if (_keyboardState.IsKeyDown(Keys.W))
-                    player.Move(forward * _moveSpeed * deltaTime);
+                    player.Move(f);
 
                 if (_keyboardState.IsKeyDown(Keys.S))
-                    player.Move(-forward * _moveSpeed * deltaTime);
+                    player.Move(-f);
 
                 if (_keyboardState.IsKeyDown(Keys.A))
-                    player.Move(-right * _moveSpeed * deltaTime);
+                    player.Move(-r);
 
                 if (_keyboardState.IsKeyDown(Keys.D))
-                    player.Move(right * _moveSpeed * deltaTime);
+                    player.Move(r);
 
                 if (_keyboardState.IsKeyDown(Keys.Space))
                     player.Move(new(0, _moveSpeed * deltaTime, 0));
 
-                if (_keyboardState.IsKeyDown(Keys.LeftControl))
+                if (ctrl)
                     player.Move(new(0, -_moveSpeed * deltaTime, 0));
             }
             else
             {
+                var f = forward * _moveSpeed * deltaTime * speedPerc;
+                f.Y = 0;
 
+                var r = right * _moveSpeed * deltaTime * speedPerc;
+                r.Y = 0;
+
+                if (_keyboardState.IsKeyDown(Keys.W))
+                    player.Move(f);
+
+                if (_keyboardState.IsKeyDown(Keys.S))
+                    player.Move(-f);
+
+                if (_keyboardState.IsKeyDown(Keys.A))
+                    player.Move(-r);
+
+                if (_keyboardState.IsKeyDown(Keys.D))
+                    player.Move(r);
+
+                if (_keyboardState.IsKeyDown(Keys.Space))
+                    player.Move(new(0, 30f * deltaTime, 0));
             }
+
+            if (_keyboardState.IsKeyDown(Keys.Escape))
+                GameMain.Instance.Exit();
 
             int mouseX = _mouseState.X - graphicsDevice.Viewport.Width / 2;
             int mouseY = _mouseState.Y - graphicsDevice.Viewport.Height / 2;

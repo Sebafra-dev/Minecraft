@@ -29,8 +29,10 @@ namespace Minecraft
                 GraphicsProfile = GraphicsProfile.HiDef
             });
             Content.RootDirectory = "Content";
-            IsMouseVisible = true;
+            IsMouseVisible = false;
             IsFixedTimeStep = false;
+
+            Window.Position = new(100, 100);
 
             Instance = this;
         }
@@ -45,7 +47,6 @@ namespace Minecraft
             Globals.SetCamera(_camera = new Camera());
 
             Mouse.SetPosition(graphicsDevice.Viewport.Width / 2, graphicsDevice.Viewport.Height / 2);
-            IsMouseVisible = false;
 
             graphicsDevice.RasterizerState = new RasterizerState()
             {
@@ -66,9 +67,6 @@ namespace Minecraft
 
         protected override void Update(GameTime gameTime)
         {
-            if (Keyboard.GetState().IsKeyDown(Keys.Escape))
-                Exit();
-
             _controlling.Update(gameTime);
             _camera.Update(gameTime);
             _map.Update(gameTime);

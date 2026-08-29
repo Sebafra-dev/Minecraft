@@ -35,7 +35,13 @@ namespace Minecraft.Source.Objects
 
         public virtual void Update(GameTime gameTime)
         {
-            //TODO gravity
+            var map = Globals.GetMap();
+            float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+            if (!map.IsBlock((int)_pos.X, (int)_pos.Y - 2, (int)_pos.Z))
+            {
+                Move(0, -10f * deltaTime, 0);
+            }
         }
     }
 }
