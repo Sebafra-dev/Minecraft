@@ -14,7 +14,7 @@ namespace Minecraft
         private readonly float _moveSpeed = 10f;
         private readonly float _moveSpeedNoClip = 30f;
         private readonly float _mouseSensitivity = 0.002f;
-        private readonly bool _noClip = false;
+        public static bool NoClip = false;
 
         public Controlling()
         {
@@ -53,7 +53,7 @@ namespace Minecraft
             var shift = _keyboardState.IsKeyDown(Keys.LeftShift);
             var speedPerc = ctrl ? 0.75f : (shift ? 1.5f : 1f);
 
-            if (_noClip)
+            if (NoClip)
             {
                 var f = forward * _moveSpeedNoClip * deltaTime * speedPerc;
                 var r = right * _moveSpeedNoClip * deltaTime * speedPerc;

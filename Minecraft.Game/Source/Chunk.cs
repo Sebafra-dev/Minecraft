@@ -1,5 +1,5 @@
 ﻿using Minecraft.Source.Objects;
-using System;
+using Minecraft.Source.Structures;
 using System.Collections.Generic;
 using static Minecraft.Source.Objects.Block;
 
@@ -14,12 +14,17 @@ namespace Minecraft.Source
         private bool[,,] _blockMap;
         private readonly List<Block> _blocks;
         private readonly List<Block> _visibleBlocks;
+        private readonly (short, short) _position;
 
-        public Chunk()
+        public Chunk((short, short) position)
         {
+            _position = position;
+
             _blockMap = new bool[WIDTH, HEIGHT, DEPTH];
             _blocks = [];
             _visibleBlocks = [];
+
+            GenerateChunk();
         }
 
         ~Chunk()
@@ -29,10 +34,36 @@ namespace Minecraft.Source
             _blockMap = null;
         }
 
-        public void AddBlockOnChunk(BlockType blockType, int x, int y, int z, bool ignoreRefresh = true)
+        public (short, short) GetPosition() => _position;
+
+        private void GenerateChunk()
         {
-            _blocks.Add(new Block(blockType, x, y, z));
-            _blockMap[x.Mod(WIDTH), y.Mod(HEIGHT), z.Mod(DEPTH)] = true;
+            for (int y = 0; y < HEIGHT; y++)
+            {
+                if (y > 70)
+                    continue;
+
+                for (int x = 0; x < WIDTH; x++)
+                {
+                    for (int z = 0; z < DEPTH; z++)
+                    {
+                        AddBlockOnChunk(y > 67 ? BlockType.Grass : BlockType.Stone, new IntPosition(x + _position.Item1 * WIDTH, y, z + _position.Item2 * DEPTH));
+                    }
+                }
+            }
+        }
+
+        public void AddBlockOnChunk(BlockType blockType, IntPosition position, bool ignoreRefresh = true) //TODO fix visibleBlocks
+        {
+            var (chunkX, chunkY, chunkZ) = (position.X.Mod(WIDTH), position.Y.Mod(HEIGHT), position.Z.Mod(DEPTH));
+            if (IsBlock(chunkX, chunkY, chunkZ))
+                return;
+
+            _blocks.Add(new Block(blockType, position));
+            _blockMap[chunkX, chunkY, chunkZ] = true;
+
+            if (!ignoreRefresh)
+                RefreshVisibleBlocks();
         }
 
         public void RefreshVisibleBlocks()

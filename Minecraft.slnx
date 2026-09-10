@@ -1,4 +1,4 @@
 <Solution>
-  <Project Path="Minecraft.Game/Minecraft.Game.csproj" />
+  <Project Path="Minecraft.Game/Minecraft.csproj" />
   <Project Path="Minecraft.Tests/Minecraft.Tests.csproj" />
 </Solution>

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Minecraft.Source.Structures;
 using System;
 using System.Collections.Generic;
 
@@ -24,18 +25,15 @@ namespace Minecraft.Source.Objects
         }
 
         private readonly BlockType _id;
-        private readonly int _x;
-        private readonly int _y;
-        private readonly int _z;
+
+        private readonly IntPosition _position;
 
         private readonly VertexPositionTexture[] _vertices;
 
-        public Block(BlockType id, int x, int y, int z)
+        public Block(BlockType id, IntPosition position)
         {
             _id = id;
-            _x = x;
-            _y = y;
-            _z = z;
+            _position = position;
             _vertices = CreateVertices();
         }
 
@@ -49,40 +47,40 @@ namespace Minecraft.Source.Objects
             return
             [
                 // FRONT
-                new(new Vector3(_x, _y, _z + 1), side[0]),
-                new(new Vector3(_x + 1, _y, _z + 1), side[1]),
-                new(new Vector3(_x + 1, _y + 1, _z + 1), side[2]),
-                new(new Vector3(_x, _y + 1, _z + 1), side[3]),
+                new(new Vector3(_position.X, _position.Y, _position.Z + 1), side[0]),
+                new(new Vector3(_position.X + 1, _position.Y, _position.Z + 1), side[1]),
+                new(new Vector3(_position.X + 1, _position.Y + 1, _position.Z + 1), side[2]),
+                new(new Vector3(_position.X, _position.Y + 1, _position.Z + 1), side[3]),
 
                 // RIGHT
-                new(new Vector3(_x + 1, _y, _z + 1), side[0]),
-                new(new Vector3(_x + 1, _y, _z), side[1]),
-                new(new Vector3(_x + 1, _y + 1, _z), side[2]),
-                new(new Vector3(_x + 1, _y + 1, _z + 1), side[3]),
+                new(new Vector3(_position.X + 1, _position.Y, _position.Z + 1), side[0]),
+                new(new Vector3(_position.X + 1, _position.Y, _position.Z), side[1]),
+                new(new Vector3(_position.X + 1, _position.Y + 1, _position.Z), side[2]),
+                new(new Vector3(_position.X + 1, _position.Y + 1, _position.Z + 1), side[3]),
 
                 // BACK
-                new(new Vector3(_x + 1, _y, _z), side[0]),
-                new(new Vector3(_x, _y, _z), side[1]),
-                new(new Vector3(_x, _y + 1, _z), side[2]),
-                new(new Vector3(_x + 1, _y + 1, _z), side[3]),
+                new(new Vector3(_position.X + 1, _position.Y, _position.Z), side[0]),
+                new(new Vector3(_position.X, _position.Y, _position.Z), side[1]),
+                new(new Vector3(_position.X, _position.Y + 1, _position.Z), side[2]),
+                new(new Vector3(_position.X + 1, _position.Y + 1, _position.Z), side[3]),
 
                 // LEFT
-                new(new Vector3(_x, _y, _z), side[0]),
-                new(new Vector3(_x, _y, _z + 1), side[1]),
-                new(new Vector3(_x, _y + 1, _z + 1), side[2]),
-                new(new Vector3(_x, _y + 1, _z), side[3]),
+                new(new Vector3(_position.X, _position.Y, _position.Z), side[0]),
+                new(new Vector3(_position.X, _position.Y, _position.Z + 1), side[1]),
+                new(new Vector3(_position.X, _position.Y + 1, _position.Z + 1), side[2]),
+                new(new Vector3(_position.X, _position.Y + 1, _position.Z), side[3]),
 
                 // TOP
-                new(new Vector3(_x, _y + 1, _z + 1), top[0]),
-                new(new Vector3(_x + 1, _y + 1, _z + 1), top[1]),
-                new(new Vector3(_x + 1, _y + 1, _z), top[2]),
-                new(new Vector3(_x, _y + 1, _z), top[3]),
+                new(new Vector3(_position.X, _position.Y + 1, _position.Z + 1), top[0]),
+                new(new Vector3(_position.X + 1, _position.Y + 1, _position.Z + 1), top[1]),
+                new(new Vector3(_position.X + 1, _position.Y + 1, _position.Z), top[2]),
+                new(new Vector3(_position.X, _position.Y + 1, _position.Z), top[3]),
 
                 // BOTTOM
-                new(new Vector3(_x, _y, _z), side[0]),
-                new(new Vector3(_x + 1, _y, _z), side[1]),
-                new(new Vector3(_x + 1, _y, _z + 1), side[2]),
-                new(new Vector3(_x, _y, _z + 1), side[3]),
+                new(new Vector3(_position.X, _position.Y, _position.Z), side[0]),
+                new(new Vector3(_position.X + 1, _position.Y, _position.Z), side[1]),
+                new(new Vector3(_position.X + 1, _position.Y, _position.Z + 1), side[2]),
+                new(new Vector3(_position.X, _position.Y, _position.Z + 1), side[3]),
             ];
         }
 
@@ -108,22 +106,22 @@ namespace Minecraft.Source.Objects
 
             foreach (var verticeType in Enum.GetValues<VerticeType>())
             {
-                if (verticeType == VerticeType.Front && map.IsBlock(_x, _y, _z + 1))
+                if (verticeType == VerticeType.Front && map.IsBlock(_position.X, _position.Y, _position.Z + 1))
                     continue;
 
-                if (verticeType == VerticeType.Right && map.IsBlock(_x + 1, _y, _z))
+                if (verticeType == VerticeType.Right && map.IsBlock(_position.X + 1, _position.Y, _position.Z))
                     continue;
 
-                if (verticeType == VerticeType.Back && map.IsBlock(_x, _y, _z - 1))
+                if (verticeType == VerticeType.Back && map.IsBlock(_position.X, _position.Y, _position.Z - 1))
                     continue;
 
-                if (verticeType == VerticeType.Left && map.IsBlock(_x - 1, _y, _z))
+                if (verticeType == VerticeType.Left && map.IsBlock(_position.X - 1, _position.Y, _position.Z))
                     continue;
 
-                if (verticeType == VerticeType.Top && map.IsBlock(_x, _y + 1, _z))
+                if (verticeType == VerticeType.Top && map.IsBlock(_position.X, _position.Y + 1, _position.Z))
                     continue;
 
-                if (verticeType == VerticeType.Bottom && map.IsBlock(_x, _y - 1, _z))
+                if (verticeType == VerticeType.Bottom && map.IsBlock(_position.X, _position.Y - 1, _position.Z))
                     continue;
 
                 vertices.Add(_vertices[(int)verticeType * 4]);
@@ -135,6 +133,10 @@ namespace Minecraft.Source.Objects
             return [.. vertices];
         }
 
-        public float GetDist(Vector3 pos) => Math.Abs(pos.X - _x + 0.5f) + Math.Abs(pos.Y - _y + 0.5f) + Math.Abs(pos.Z  - _z + 0.5f);
+        public float GetDist(Vector3 pos) 
+        {
+            return Math.Abs(pos.X - _position.X + 0.5f) + Math.Abs(pos.Y - _position.Y + 0.5f) + Math.Abs(pos.Z - _position.Z + 0.5f);
+        }
+
     }
 }

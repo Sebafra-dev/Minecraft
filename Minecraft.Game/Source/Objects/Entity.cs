@@ -11,6 +11,8 @@ namespace Minecraft.Source.Objects
 
         }
 
+        public Vector3 GetPosition() => _pos;
+
         public void SetPosition(Vector3 pos)
         {
             _pos = pos;
