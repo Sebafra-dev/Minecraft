@@ -1,6 +1,9 @@
 ﻿using Minecraft.Source.Objects;
 using Minecraft.Source.Structures;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using static Minecraft.Source.Objects.Block;
 
@@ -13,12 +16,12 @@ namespace Minecraft.Source
         public const int DEPTH = 16;
 
         private Block[,,] _blocks;
-        private readonly HashSet<Block> _visibleBlocks;
-        private readonly (short, short) _position;
+        private HashSet<Block> _visibleBlocks;
+        private readonly ChunkPosition _position;
 
         private bool _generated = false;
 
-        public Chunk((short, short) position)
+        public Chunk(ChunkPosition position)
         {
             _position = position;
 
@@ -34,12 +37,12 @@ namespace Minecraft.Source
             _visibleBlocks.Clear();
         }
 
-        public (short, short) GetPosition() => _position;
+        public ChunkPosition GetPosition() => _position;
 
         private void GenerateChunk()
         {
-            var chunkX = _position.Item1 * WIDTH;
-            var chunkZ = _position.Item2 * DEPTH;
+            var chunkX = _position.X * WIDTH;
+            var chunkZ = _position.Z * DEPTH;
             for (int y = 0; y < HEIGHT; y++)
             {
                 if (y > 70)
@@ -57,11 +60,11 @@ namespace Minecraft.Source
 
         public void AddBlockOnChunk(BlockType blockType, IntPosition position)
         {
-            var (chunkX, chunkY, chunkZ) = (position.X.Mod(WIDTH), position.Y.Mod(HEIGHT), position.Z.Mod(DEPTH));
+            var (chunkX, chunkY, chunkZ) = (position.X.Mod(WIDTH), position.Y, position.Z.Mod(DEPTH));
             if (IsBlock(chunkX, chunkY, chunkZ))
                 return;
 
-            _blocks[chunkX, chunkY, chunkZ] = new Block(blockType, position);
+            _blocks[chunkX, chunkY, chunkZ] = new Block(blockType, new(chunkX, chunkY, chunkZ));
         }
 
         public void RefreshVisibleBlocks()
@@ -77,11 +80,98 @@ namespace Minecraft.Source
             }
         }
 
+        public enum BoundaryType
+        {
+            PlusX,
+            MinusX,
+            PlusZ,
+            MinusZ
+        }
+
+        public void RefreshBoundaries(BoundaryType boundaryType)
+        {
+            var visibleBlocks = _visibleBlocks.ToHashSet();
+
+            int boundary;
+            bool isXBoundary;
+
+            switch (boundaryType)
+            {
+                case BoundaryType.PlusX:
+                    boundary = 0;
+                    isXBoundary = true;
+                    break;
+
+                case BoundaryType.MinusX:
+                    boundary = WIDTH - 1;
+                    isXBoundary = true;
+                    break;
+
+                case BoundaryType.PlusZ:
+                    boundary = 0;
+                    isXBoundary = false;
+                    break;
+
+                case BoundaryType.MinusZ:
+                    boundary = DEPTH - 1;
+                    isXBoundary = false;
+                    break;
+
+                default:
+                    return;
+            }
+
+            if (isXBoundary)
+            {
+                for (int y = 0; y < HEIGHT; y++)
+                {
+                    for (int z = 0; z < DEPTH; z++)
+                    {
+                        var block = _blocks[boundary, y, z];
+
+                        if (block != null &&
+                            visibleBlocks.Contains(block) &&
+                            !block.IsVisible())
+                        {
+                            visibleBlocks.Remove(block);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                for (int y = 0; y < HEIGHT; y++)
+                {
+                    for (int x = 0; x < WIDTH; x++)
+                    {
+                        var block = _blocks[x, y, boundary];
+
+                        if (block != null &&
+                            visibleBlocks.Contains(block) &&
+                            !block.IsVisible())
+                        {
+                            visibleBlocks.Remove(block);
+                        }
+                    }
+                }
+            }
+
+            //if (_visibleBlocks.Count != visibleBlocks.Count)
+            //Debug.WriteLine($"{_visibleBlocks.Count} -> {visibleBlocks.Count}");
+
+            _visibleBlocks = visibleBlocks;
+        }
+
         public HashSet<Block> GetVisibleBlocks() => _visibleBlocks; 
 
-        public bool IsBlock(int x, int y, int z) => _blocks[x, y, z] != null;
+        public bool IsBlock(int x, int y, int z) => y < 0 || y >= HEIGHT || _blocks[x, y, z] != null;
 
         public bool IsActive() => _generated;
+
+        public void SetInactive()
+        {
+            _generated = false;
+        }
 
         public void SetActive()
         {

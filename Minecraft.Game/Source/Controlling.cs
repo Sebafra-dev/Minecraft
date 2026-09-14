@@ -1,8 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
-using Minecraft.Source;
 
-namespace Minecraft
+namespace Minecraft.Source
 {
     public class Controlling
     {

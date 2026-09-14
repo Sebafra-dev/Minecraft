@@ -8,7 +8,7 @@ namespace Minecraft.Source.Objects
 {
     public class Block
     {
-        public enum BlockType
+        public enum BlockType : byte
         {
             Grass,
             Stone
@@ -16,12 +16,12 @@ namespace Minecraft.Source.Objects
 
         private readonly BlockType _id;
 
-        private readonly IntPosition _position;
+        private readonly BlockPosition _position;
 
         public Block(BlockType id, IntPosition position)
         {
             _id = id;
-            _position = position;
+            _position = new(position.X, position.Y, position.Z);
         }
 
         private Tuple<int, int> GetIdsOnAtlas()
@@ -39,7 +39,7 @@ namespace Minecraft.Source.Objects
             return new(0, 0);
         }
 
-        public VertexPositionTexture[] GetVertices()
+        public VertexPositionTexture[] GetVertices(ChunkPosition chunkPos)
         {
             List<VertexPositionTexture> vertices = [];
 
@@ -49,7 +49,8 @@ namespace Minecraft.Source.Objects
 
             var map = Globals.GetMap();
 
-            var (x, y, z) = (_position.X, _position.Y, _position.Z);
+            var pos = _position.ToIntPosition();
+            var (x, y, z) = (pos.X + chunkPos.X * Chunk.WIDTH, pos.Y, pos.Z + chunkPos.Z * Chunk.DEPTH);
 
             if (!map.IsBlock(x, y, z + 1))
             {
@@ -114,21 +115,24 @@ namespace Minecraft.Source.Objects
         public bool IsVisible()
         {
             var map = Globals.GetMap();
+            var pos = _position.ToIntPosition();
 
             foreach (var offset in _offsets)
             {
-                if (!map.IsBlock(_position.X + offset.X, _position.Y + offset.Y, _position.Z + offset.Z))
+                if (!map.IsBlock(pos.X + offset.X, pos.Y + offset.Y, pos.Z + offset.Z))
                     return true;
             }
 
             return false;
         }
 
-        public float GetDist(Vector3 pos) 
+        public float GetDist(ChunkPosition chunkPos, Vector3 pos2) 
         {
-            var (x, y, z) = (_position.X, _position.Y, _position.Z);
+            var pos = _position.ToIntPosition();
+            pos.X += chunkPos.X * Chunk.WIDTH;
+            pos.Z += chunkPos.Z * Chunk.DEPTH;
 
-            return Math.Abs(pos.X - x + 0.5f) + Math.Abs(pos.Y - y + 0.5f) + Math.Abs(pos.Z - z + 0.5f);
+            return Math.Abs(pos2.X - pos.X + 0.5f) + Math.Abs(pos2.Y - pos.Y + 0.5f) + Math.Abs(pos2.Z - pos.Z + 0.5f);
         }
 
     }

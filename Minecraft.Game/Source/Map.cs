@@ -4,7 +4,6 @@ using Minecraft.Source.Objects;
 using Minecraft.Source.Structures;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using static Minecraft.Source.Objects.Block;
@@ -15,18 +14,19 @@ namespace Minecraft.Source
     {
         private readonly BasicEffect _effect;
 
-        private readonly Dictionary<(short, short), Chunk> _chunks;
-        private readonly List<(short, short)> _visibleChunks;
-        private readonly List<Block> _visisbleBlocks;
+        private readonly Dictionary<ChunkPosition, Chunk> _chunks;
+        private readonly List<ChunkPosition> _visibleChunks;
         private readonly List<VertexPositionTexture> _vertices;
         private readonly List<int> _indices;
         private readonly List<Entity> _entities;
 
-        private (short, short)? _previousPlayerChunk;
+        private ChunkPosition? _previousPlayerChunk;
 
         private bool _initialized = false;
 
-        private const int RENDER_DISTANCE = 3;
+        private const int RENDER_DISTANCE = 10;
+
+        private List<ChunkPosition> _chunkOrder;
 
         public Map()
         {
@@ -39,7 +39,6 @@ namespace Minecraft.Source
                 Projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(60), graphicsDevice.Viewport.AspectRatio, 0.1f, 1000f)
             };
 
-            _visisbleBlocks = [];
             _chunks = [];
             _visibleChunks = [];
 
@@ -47,6 +46,8 @@ namespace Minecraft.Source
             _indices = [];
 
             _entities = [];
+
+            GenerateChunkOrder();
 
             var player = new Player();
             player.SetPosition(0, 75, 0);
@@ -56,7 +57,6 @@ namespace Minecraft.Source
 
         ~Map()
         {
-            _visisbleBlocks.Clear();
             _chunks.Clear();
             _visibleChunks.Clear();
             _vertices.Clear();
@@ -76,8 +76,8 @@ namespace Minecraft.Source
                     continue;
 
                 var chunkPos = chunk.GetPosition();
-                var x = chunkPos.Item1 * Chunk.WIDTH;
-                var z = chunkPos.Item2 * Chunk.DEPTH;
+                var x = chunkPos.X * Chunk.WIDTH;
+                var z = chunkPos.Z * Chunk.DEPTH;
 
                 var min = new Vector3(x, 0, z);
                 var max = new Vector3(x + Chunk.WIDTH, Chunk.HEIGHT, z + Chunk.DEPTH);
@@ -93,9 +93,9 @@ namespace Minecraft.Source
             return chunks;
         }
 
-        private static (short, short) GetChunkIdFromPos(Vector3 pos) => GetChunkIdFromPos(pos.X, pos.Y, pos.Z);
+        private static ChunkPosition GetChunkIdFromPos(Vector3 pos) => GetChunkIdFromPos(pos.X, pos.Y, pos.Z);
 
-        private static (short, short) GetChunkIdFromPos(float x, float y, float z) => ((short)Math.Floor(x / Chunk.WIDTH), (short)Math.Floor(z / Chunk.DEPTH));
+        private static ChunkPosition GetChunkIdFromPos(float x, float y, float z) => new((int)Math.Floor(x / Chunk.WIDTH), (int)Math.Floor(z / Chunk.DEPTH));
 
         public void AddBlockOnMap(BlockType blockType, IntPosition position)
         {
@@ -112,7 +112,7 @@ namespace Minecraft.Source
             if ((chunk = GetChunkOnPos(new IntPosition(x, y, z))) == null) 
                 return false;
 
-            return chunk.IsBlock(x.Mod(Chunk.WIDTH), y.Mod(Chunk.HEIGHT), z.Mod(Chunk.DEPTH));
+            return chunk.IsBlock(x.Mod(Chunk.WIDTH), y, z.Mod(Chunk.DEPTH));
         }
 
         public Chunk GetChunkOnPos(float x, float y, float z) => GetChunkOnPos(new Vector3(x, y, z));
@@ -129,7 +129,7 @@ namespace Minecraft.Source
             return chunk;
         }
 
-        public Chunk GetChunkOnChunkPos((short, short) chunkPos)
+        public Chunk GetChunkOnChunkPos(ChunkPosition chunkPos)
         {
             if (!_chunks.TryGetValue(chunkPos, out Chunk chunk))
                 return null;
@@ -137,37 +137,67 @@ namespace Minecraft.Source
             return chunk;
         }
 
-        public async Task CreateChunks(Vector3 pos)
+        private void GenerateChunkOrder()
         {
-            var chunkIds = new List<(short, short)>();
+            _chunkOrder = [];
 
             for (int i = -RENDER_DISTANCE; i <= RENDER_DISTANCE; i++)
             {
                 for (int j = -RENDER_DISTANCE; j <= RENDER_DISTANCE; j++)
                 {
-                    var x = pos.X + i * Chunk.WIDTH;
-                    var z = pos.Z + j * Chunk.DEPTH;
-
-                    var id = GetChunkIdFromPos(x, pos.Y, z);
-                    chunkIds.Add(id);
-
-                    if (_chunks.ContainsKey(id))
-                        continue;
-
-                    var chunk = await Task.Run(() => new Chunk(id));
-
-                    _chunks.Add(id, chunk);
+                    _chunkOrder.Add(new(i, j));
                 }
+            }
+
+            _chunkOrder = [.. _chunkOrder.OrderBy(_ => Math.Abs(_.X) + Math.Abs(_.Z))];
+        }
+
+        public async void CreateChunks(Vector3 pos)
+        {
+            var chunkIds = new List<ChunkPosition>();
+            var newChunks = new List<ChunkPosition>();
+
+            foreach (var chunkOrder in _chunkOrder)
+            {
+                var x = pos.X + chunkOrder.X * Chunk.WIDTH;
+                var z = pos.Z + chunkOrder.Z * Chunk.DEPTH;
+
+                var id = GetChunkIdFromPos(x, pos.Y, z);
+                chunkIds.Add(id);
+
+                if (_chunks.ContainsKey(id))
+                    continue;
+
+                var chunk = await Task.Run(() => new Chunk(id));
+
+                newChunks.Add(id);
+                _chunks.Add(id, chunk);
+
             }
 
             _visibleChunks.Clear();
             _visibleChunks.AddRange(chunkIds);
 
-            foreach (var id in _visibleChunks)
+            foreach (var newChunkId in newChunks)
             {
-                var chunk = _chunks[id];
+                var chunk = _chunks[newChunkId];
                 chunk.RefreshVisibleBlocks();
                 chunk.SetActive();
+
+                foreach (var chunkOffset in new ChunkPosition[4] { new(0, 1), new(1, 0), new(0, -1), new(-1, 0) })
+                {
+                    if (!_chunks.TryGetValue(newChunkId + chunkOffset, out Chunk chunk2))
+                        continue;
+
+                    if (chunkOffset == new ChunkPosition(1, 0))
+                        chunk2.RefreshBoundaries(Chunk.BoundaryType.PlusX);
+                    else if(chunkOffset == new ChunkPosition(-1, 0))
+                        chunk2.RefreshBoundaries(Chunk.BoundaryType.MinusX);
+                    else if (chunkOffset == new ChunkPosition(0, 1))
+                        chunk2.RefreshBoundaries(Chunk.BoundaryType.PlusZ);
+                    else if (chunkOffset == new ChunkPosition(0, -1))
+                        chunk2.RefreshBoundaries(Chunk.BoundaryType.MinusZ);
+                }
             }
         }
 
@@ -176,7 +206,6 @@ namespace Minecraft.Source
             var pos = Globals.GetPlayer().GetPosition();
             var chunkPos = GetChunkIdFromPos(pos);
             
-
             if (_previousPlayerChunk == null || _previousPlayerChunk != chunkPos)
             {
                 CreateChunks(pos);
@@ -204,38 +233,38 @@ namespace Minecraft.Source
 
             graphicsDevice.SamplerStates[0] = SamplerState.PointClamp;
 
-            _visisbleBlocks.Clear();
-
             var visibleChunks = GetVisibleChunks();
-
-            foreach (var chunk in visibleChunks)
-                _visisbleBlocks.AddRange(chunk.GetVisibleBlocks());
-
-            var sortedBlocks = _visisbleBlocks; // _visisbleBlocks.OrderByDescending(_ => _.GetDist(camera.GetCameraPos()));
 
             _vertices.Clear();
             _indices.Clear();
             var ids = 0;
 
-            foreach (var block in sortedBlocks)
+            var blocksCounter = 0;
+
+            foreach (var chunk in visibleChunks)
             {
-                var blockVertices = block?.GetVertices();
-                _vertices.AddRange(blockVertices);
-
-                for (int i = 0; i < blockVertices.Length / 4; i++)
+                var blocks = chunk.GetVisibleBlocks();
+                foreach (var block in blocks)
                 {
-                    int offset = ids + i * 4;
+                    var blockVertices = block?.GetVertices(chunk.GetPosition());
+                    _vertices.AddRange(blockVertices);
 
-                    _indices.AddRange([
-                        offset, offset + 2, offset + 1,
+                    for (int i = 0; i < blockVertices.Length / 4; i++)
+                    {
+                        int offset = ids + i * 4;
+
+                        _indices.AddRange([
+                            offset, offset + 2, offset + 1,
                         offset, offset + 3, offset + 2
-                    ]);
-                }
+                        ]);
+                    }
 
-                ids += blockVertices.Length;
+                    ids += blockVertices.Length;
+                    blocksCounter++;
+                }
             }
 
-            Globals.GetHud().OnRenderData(_chunks.Count, visibleChunks.Count, _visisbleBlocks.Count, _vertices.Count);
+            Globals.GetHud().OnRenderData(_chunks.Count, visibleChunks.Count, blocksCounter, _vertices.Count);
 
             if (_vertices.Count > 0)
             {
