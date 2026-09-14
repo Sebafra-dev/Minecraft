@@ -103,22 +103,27 @@ namespace Minecraft.Source.Objects
             return [.. vertices];
         }
 
-        private static readonly List<IntPosition> _offsets = [
+        private static readonly IntPosition[] _offsets = [
             new(1, 0, 0),
-            new(0, 1, 0),
             new(-1, 0, 0),
+            new(0, 1, 0),
             new(0, -1, 0),
             new(0, 0, 1),
-            new(1, 0, 0)
+            new(0, 0, -1) 
         ];
 
-        public bool IsVisible()
+        public bool IsVisible(ChunkPosition chunkPos)
         {
             var map = Globals.GetMap();
             var pos = _position.ToIntPosition();
+            pos.X += chunkPos.X * Chunk.WIDTH;
+            pos.Z += chunkPos.Z * Chunk.DEPTH;
 
-            foreach (var offset in _offsets)
+            ReadOnlySpan<IntPosition> offsetsSpan = _offsets;
+
+            for (int i = 0; i < offsetsSpan.Length; i++)
             {
+                var offset = offsetsSpan[i];
                 if (!map.IsBlock(pos.X + offset.X, pos.Y + offset.Y, pos.Z + offset.Z))
                     return true;
             }

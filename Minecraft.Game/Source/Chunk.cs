@@ -1,10 +1,8 @@
 ﻿using Minecraft.Source.Objects;
 using Minecraft.Source.Structures;
-using System.Collections.Concurrent;
+using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Threading;
 using static Minecraft.Source.Objects.Block;
 
 namespace Minecraft.Source
@@ -43,16 +41,25 @@ namespace Minecraft.Source
         {
             var chunkX = _position.X * WIDTH;
             var chunkZ = _position.Z * DEPTH;
-            for (int y = 0; y < HEIGHT; y++)
+            for (int x = 0; x < WIDTH; x++)
             {
-                if (y > 70)
-                    continue;
-
-                for (int x = 0; x < WIDTH; x++)
+                for (int z = 0; z < DEPTH; z++)
                 {
-                    for (int z = 0; z < DEPTH; z++)
+                    int globalX = x + chunkX;
+                    int globalZ = z + chunkZ;
+
+                    float noiseValue = Globals.GetNoise().GetNoise(globalX, globalZ);
+
+                    int baseHeight = 70;
+                    int maxVariancy = 40;
+                    int terrainHeight = baseHeight + (int)(noiseValue * maxVariancy);
+                    terrainHeight = Math.Clamp(terrainHeight, 0, HEIGHT - 1);
+
+                    for (int y = 0; y <= terrainHeight; y++)
                     {
-                        AddBlockOnChunk(y > 67 ? BlockType.Grass : BlockType.Stone, new IntPosition(x + chunkX, y, z + chunkZ));
+                        BlockType blockType = (y == terrainHeight) ? BlockType.Grass : BlockType.Stone;
+
+                        AddBlockOnChunk(blockType, new IntPosition(globalX, y, globalZ));
                     }
                 }
             }
@@ -73,7 +80,7 @@ namespace Minecraft.Source
 
             foreach (var block in _blocks)
             {
-                if (block == null || !block.IsVisible())
+                if (block == null || !block.IsVisible(_position))
                     continue;
 
                 _visibleBlocks.Add(block);
@@ -129,11 +136,16 @@ namespace Minecraft.Source
                     {
                         var block = _blocks[boundary, y, z];
 
-                        if (block != null &&
-                            visibleBlocks.Contains(block) &&
-                            !block.IsVisible())
+                        if (block != null)
                         {
-                            visibleBlocks.Remove(block);
+                            if (block.IsVisible(_position))
+                            {
+                                visibleBlocks.Add(block);
+                            }
+                            else
+                            {
+                                visibleBlocks.Remove(block);
+                            }
                         }
                     }
                 }
@@ -146,11 +158,16 @@ namespace Minecraft.Source
                     {
                         var block = _blocks[x, y, boundary];
 
-                        if (block != null &&
-                            visibleBlocks.Contains(block) &&
-                            !block.IsVisible())
+                        if (block != null)
                         {
-                            visibleBlocks.Remove(block);
+                            if (block.IsVisible(_position))
+                            {
+                                visibleBlocks.Add(block);
+                            }
+                            else
+                            {
+                                visibleBlocks.Remove(block);
+                            }
                         }
                     }
                 }

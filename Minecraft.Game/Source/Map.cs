@@ -15,6 +15,7 @@ namespace Minecraft.Source
         private readonly BasicEffect _effect;
 
         private readonly Dictionary<ChunkPosition, Chunk> _chunks;
+        private readonly List<Tuple<Block, Chunk>> _visibleBlocks;
         private readonly List<ChunkPosition> _visibleChunks;
         private readonly List<VertexPositionTexture> _vertices;
         private readonly List<int> _indices;
@@ -40,6 +41,7 @@ namespace Minecraft.Source
             };
 
             _chunks = [];
+            _visibleBlocks = [];
             _visibleChunks = [];
 
             _vertices = [];
@@ -53,11 +55,18 @@ namespace Minecraft.Source
             player.SetPosition(0, 75, 0);
             Globals.SetPlayer(player);
             _entities.Add(player);
+
+            var noise = Globals.GetNoise();
+            noise.SetNoiseType(FastNoiseLite.NoiseType.OpenSimplex2);
+            noise.SetFrequency(0.01f);
+            noise.SetFractalType(FastNoiseLite.FractalType.FBm);
+            noise.SetFractalOctaves(4);
         }
 
         ~Map()
         {
             _chunks.Clear();
+            _visibleBlocks.Clear();
             _visibleChunks.Clear();
             _vertices.Clear();
             _indices.Clear();
@@ -235,36 +244,42 @@ namespace Minecraft.Source
 
             var visibleChunks = GetVisibleChunks();
 
-            _vertices.Clear();
-            _indices.Clear();
-            var ids = 0;
-
-            var blocksCounter = 0;
+            _visibleBlocks.Clear();
 
             foreach (var chunk in visibleChunks)
             {
                 var blocks = chunk.GetVisibleBlocks();
                 foreach (var block in blocks)
                 {
-                    var blockVertices = block?.GetVertices(chunk.GetPosition());
-                    _vertices.AddRange(blockVertices);
-
-                    for (int i = 0; i < blockVertices.Length / 4; i++)
-                    {
-                        int offset = ids + i * 4;
-
-                        _indices.AddRange([
-                            offset, offset + 2, offset + 1,
-                        offset, offset + 3, offset + 2
-                        ]);
-                    }
-
-                    ids += blockVertices.Length;
-                    blocksCounter++;
+                    _visibleBlocks.Add(new(block, chunk));
                 }
             }
 
-            Globals.GetHud().OnRenderData(_chunks.Count, visibleChunks.Count, blocksCounter, _vertices.Count);
+            _vertices.Clear();
+            _indices.Clear();
+            var ids = 0;
+
+            var sortedBlocks = _visibleBlocks.OrderByDescending(_ => _.Item1.GetDist(_.Item2.GetPosition(), camera.GetCameraPos()));
+
+            foreach (var (block, chunk) in sortedBlocks)
+            {
+                var blockVertices = block?.GetVertices(chunk.GetPosition());
+                _vertices.AddRange(blockVertices);
+
+                for (int i = 0; i < blockVertices.Length / 4; i++)
+                {
+                    int offset = ids + i * 4;
+
+                    _indices.AddRange([
+                        offset, offset + 2, offset + 1,
+                        offset, offset + 3, offset + 2
+                    ]);
+                }
+
+                ids += blockVertices.Length;
+            }
+
+            Globals.GetHud().OnRenderData(_chunks.Count, visibleChunks.Count, _visibleBlocks.Count, _vertices.Count);
 
             if (_vertices.Count > 0)
             {

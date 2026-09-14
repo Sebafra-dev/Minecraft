@@ -17,6 +17,8 @@ namespace Minecraft.Source
         private static Player _player;
         private static Controlling _controlling;
 
+        private readonly static FastNoiseLite _noise = new(1337);
+
         public readonly static int SEC_TO_MS = 1000;
 
         public static GraphicsDeviceManager GetGraphics() => _graphics;
@@ -28,6 +30,7 @@ namespace Minecraft.Source
         public static HUD GetHud() => _hud;
         public static Player GetPlayer() => _player;
         public static Controlling GetControlling() => _controlling;
+        public static FastNoiseLite GetNoise() => _noise;
 
         public static void SetGraphics(GraphicsDeviceManager graphics)
         {
