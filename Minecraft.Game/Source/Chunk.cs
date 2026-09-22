@@ -1,8 +1,7 @@
 ﻿using Minecraft.Source.Objects;
 using Minecraft.Source.Structures;
 using System;
-using System.Collections.Generic;
-using System.Linq;
+using static Minecraft.Source.GreedyMesher;
 using static Minecraft.Source.Objects.Block;
 
 namespace Minecraft.Source
@@ -14,17 +13,17 @@ namespace Minecraft.Source
         public const int DEPTH = 16;
 
         private Block[,,] _blocks;
-        private HashSet<Block> _visibleBlocks;
         private readonly ChunkPosition _position;
 
         private bool _generated = false;
+
+        private MeshData _mesh;
 
         public Chunk(ChunkPosition position)
         {
             _position = position;
 
             _blocks = new Block[WIDTH, HEIGHT, DEPTH];
-            _visibleBlocks = [];
 
             GenerateChunk();
         }
@@ -32,7 +31,6 @@ namespace Minecraft.Source
         ~Chunk()
         {
             _blocks = null;
-            _visibleBlocks.Clear();
         }
 
         public ChunkPosition GetPosition() => _position;
@@ -74,112 +72,10 @@ namespace Minecraft.Source
             _blocks[chunkX, chunkY, chunkZ] = new Block(blockType, new(chunkX, chunkY, chunkZ));
         }
 
-        public void RefreshVisibleBlocks()
+        public void RefreshMesh()
         {
-            _visibleBlocks.Clear();
-
-            foreach (var block in _blocks)
-            {
-                if (block == null || !block.IsVisible(_position))
-                    continue;
-
-                _visibleBlocks.Add(block);
-            }
-        }
-
-        public enum BoundaryType
-        {
-            PlusX,
-            MinusX,
-            PlusZ,
-            MinusZ
-        }
-
-        public void RefreshBoundaries(BoundaryType boundaryType)
-        {
-            var visibleBlocks = _visibleBlocks.ToHashSet();
-
-            int boundary;
-            bool isXBoundary;
-
-            switch (boundaryType)
-            {
-                case BoundaryType.PlusX:
-                    boundary = 0;
-                    isXBoundary = true;
-                    break;
-
-                case BoundaryType.MinusX:
-                    boundary = WIDTH - 1;
-                    isXBoundary = true;
-                    break;
-
-                case BoundaryType.PlusZ:
-                    boundary = 0;
-                    isXBoundary = false;
-                    break;
-
-                case BoundaryType.MinusZ:
-                    boundary = DEPTH - 1;
-                    isXBoundary = false;
-                    break;
-
-                default:
-                    return;
-            }
-
-            if (isXBoundary)
-            {
-                for (int y = 0; y < HEIGHT; y++)
-                {
-                    for (int z = 0; z < DEPTH; z++)
-                    {
-                        var block = _blocks[boundary, y, z];
-
-                        if (block != null)
-                        {
-                            if (block.IsVisible(_position))
-                            {
-                                visibleBlocks.Add(block);
-                            }
-                            else
-                            {
-                                visibleBlocks.Remove(block);
-                            }
-                        }
-                    }
-                }
-            }
-            else
-            {
-                for (int y = 0; y < HEIGHT; y++)
-                {
-                    for (int x = 0; x < WIDTH; x++)
-                    {
-                        var block = _blocks[x, y, boundary];
-
-                        if (block != null)
-                        {
-                            if (block.IsVisible(_position))
-                            {
-                                visibleBlocks.Add(block);
-                            }
-                            else
-                            {
-                                visibleBlocks.Remove(block);
-                            }
-                        }
-                    }
-                }
-            }
-
-            //if (_visibleBlocks.Count != visibleBlocks.Count)
-            //Debug.WriteLine($"{_visibleBlocks.Count} -> {visibleBlocks.Count}");
-
-            _visibleBlocks = visibleBlocks;
-        }
-
-        public HashSet<Block> GetVisibleBlocks() => _visibleBlocks; 
+            _mesh = Build(this);
+        } 
 
         public bool IsBlock(int x, int y, int z) => y < 0 || y >= HEIGHT || _blocks[x, y, z] != null;
 
@@ -194,5 +90,17 @@ namespace Minecraft.Source
         {
             _generated = true;
         }
+
+        public Block GetBlock(int x, int y, int z)
+        {
+            if (x < 0 || x >= WIDTH ||
+                y < 0 || y >= HEIGHT ||
+                z < 0 || z >= DEPTH)
+                return null;
+
+            return _blocks[x, y, z];
+        }
+
+        public MeshData GetMeshData() => _mesh;
     }
 }

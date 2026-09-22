@@ -12,7 +12,7 @@ namespace Minecraft.Source
         private float _pitch = 0f;
         private readonly float _moveSpeed = 10f;
         private readonly float _moveSpeedNoClip = 30f;
-        private readonly float _mouseSensitivity = 0.002f;
+        private readonly float _mouseSensitivity = 0.01f;
         public static bool NoClip = false;
 
         public Controlling()

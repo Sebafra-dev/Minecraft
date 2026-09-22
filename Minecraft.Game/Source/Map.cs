@@ -3,8 +3,10 @@ using Microsoft.Xna.Framework.Graphics;
 using Minecraft.Source.Objects;
 using Minecraft.Source.Structures;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using static Minecraft.Source.Objects.Block;
 
@@ -12,36 +14,22 @@ namespace Minecraft.Source
 {
     public sealed class Map
     {
-        private readonly BasicEffect _effect;
-
         private readonly Dictionary<ChunkPosition, Chunk> _chunks;
-        private readonly List<Tuple<Block, Chunk>> _visibleBlocks;
-        private readonly List<ChunkPosition> _visibleChunks;
-        private readonly List<VertexPositionTexture> _vertices;
+        private readonly ConcurrentBag<ChunkPosition> _visibleChunks;
+        private readonly List<VoxelVertex> _vertices;
         private readonly List<int> _indices;
         private readonly List<Entity> _entities;
 
         private ChunkPosition? _previousPlayerChunk;
 
-        private bool _initialized = false;
-
-        private const int RENDER_DISTANCE = 10;
+        private const int RENDER_DISTANCE = 20;
 
         private List<ChunkPosition> _chunkOrder;
+        private readonly SemaphoreSlim _chunkCreationLock = new(1, 1);
 
         public Map()
         {
-            var graphicsDevice = Globals.GetGraphics().GraphicsDevice;
-
-            _effect = new BasicEffect(graphicsDevice)
-            {
-                TextureEnabled = true,
-                World = Matrix.Identity,
-                Projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(60), graphicsDevice.Viewport.AspectRatio, 0.1f, 1000f)
-            };
-
             _chunks = [];
-            _visibleBlocks = [];
             _visibleChunks = [];
 
             _vertices = [];
@@ -58,7 +46,7 @@ namespace Minecraft.Source
 
             var noise = Globals.GetNoise();
             noise.SetNoiseType(FastNoiseLite.NoiseType.OpenSimplex2);
-            noise.SetFrequency(0.01f);
+            noise.SetFrequency(0.005f);
             noise.SetFractalType(FastNoiseLite.FractalType.FBm);
             noise.SetFractalOctaves(4);
         }
@@ -66,7 +54,6 @@ namespace Minecraft.Source
         ~Map()
         {
             _chunks.Clear();
-            _visibleBlocks.Clear();
             _visibleChunks.Clear();
             _vertices.Clear();
             _indices.Clear();
@@ -75,7 +62,9 @@ namespace Minecraft.Source
 
         private List<Chunk> GetVisibleChunks()
         {
-            BoundingFrustum frustum = new(_effect.View * _effect.Projection);
+            var view = Globals.GetCamera().GetView();
+
+            BoundingFrustum frustum = new(view * Globals.PROJECTION);
             var chunks = new List<Chunk>();
 
             foreach (var chunkId in _visibleChunks)
@@ -163,50 +152,66 @@ namespace Minecraft.Source
 
         public async void CreateChunks(Vector3 pos)
         {
-            var chunkIds = new List<ChunkPosition>();
-            var newChunks = new List<ChunkPosition>();
+            await _chunkCreationLock.WaitAsync();
 
-            foreach (var chunkOrder in _chunkOrder)
+            try
             {
-                var x = pos.X + chunkOrder.X * Chunk.WIDTH;
-                var z = pos.Z + chunkOrder.Z * Chunk.DEPTH;
+                var chunkIds = new List<ChunkPosition>();
+                var missingIds = new List<ChunkPosition>();
 
-                var id = GetChunkIdFromPos(x, pos.Y, z);
-                chunkIds.Add(id);
-
-                if (_chunks.ContainsKey(id))
-                    continue;
-
-                var chunk = await Task.Run(() => new Chunk(id));
-
-                newChunks.Add(id);
-                _chunks.Add(id, chunk);
-
-            }
-
-            _visibleChunks.Clear();
-            _visibleChunks.AddRange(chunkIds);
-
-            foreach (var newChunkId in newChunks)
-            {
-                var chunk = _chunks[newChunkId];
-                chunk.RefreshVisibleBlocks();
-                chunk.SetActive();
-
-                foreach (var chunkOffset in new ChunkPosition[4] { new(0, 1), new(1, 0), new(0, -1), new(-1, 0) })
+                foreach (var chunkOrder in _chunkOrder)
                 {
-                    if (!_chunks.TryGetValue(newChunkId + chunkOffset, out Chunk chunk2))
-                        continue;
+                    var x = pos.X + chunkOrder.X * Chunk.WIDTH;
+                    var z = pos.Z + chunkOrder.Z * Chunk.DEPTH;
 
-                    if (chunkOffset == new ChunkPosition(1, 0))
-                        chunk2.RefreshBoundaries(Chunk.BoundaryType.PlusX);
-                    else if(chunkOffset == new ChunkPosition(-1, 0))
-                        chunk2.RefreshBoundaries(Chunk.BoundaryType.MinusX);
-                    else if (chunkOffset == new ChunkPosition(0, 1))
-                        chunk2.RefreshBoundaries(Chunk.BoundaryType.PlusZ);
-                    else if (chunkOffset == new ChunkPosition(0, -1))
-                        chunk2.RefreshBoundaries(Chunk.BoundaryType.MinusZ);
+                    var id = GetChunkIdFromPos(x, pos.Y, z);
+
+                    chunkIds.Add(id);
+
+                    if (!_chunks.ContainsKey(id))
+                        missingIds.Add(id);
                 }
+
+                var generated = await Task.WhenAll(missingIds.Select(id =>
+                    Task.Run(() => {
+                        var chunk = new Chunk(id);
+                        return (Id: id, Chunk: chunk);
+                    })
+                ));
+
+                foreach (var item in generated)
+                    _chunks.Add(item.Id, item.Chunk);
+
+                _visibleChunks.Clear();
+
+                foreach (var id in chunkIds)
+                    _visibleChunks.Add(id);
+
+                var chunksMesh = new HashSet<Chunk>();
+
+                foreach (var item in generated)
+                {
+                    chunksMesh.Add(item.Chunk);
+
+                    foreach (var offset in new ChunkPosition[] { new(0, 1), new(1, 0), new(0, -1), new(-1, 0) })
+                    {
+                        if (!_chunks.TryGetValue(item.Id + offset, out var chunk2))
+                            continue;
+
+                        chunksMesh.Add(chunk2);
+                    }
+                }
+
+                await Task.WhenAll(chunksMesh.Select(chunk =>
+                    Task.Run(() => {
+                        chunk.RefreshMesh();
+                        chunk.SetActive();
+                    })
+                ));
+            }
+            finally
+            {
+                _chunkCreationLock.Release();
             }
         }
 
@@ -232,61 +237,34 @@ namespace Minecraft.Source
             var graphicsDevice = Globals.GetGraphics().GraphicsDevice;
             var camera = Globals.GetCamera();
 
-            if (!_initialized)
-            {
-                _initialized = true;
-                _effect.Texture = Globals.GetTexture();
-            }
-
-            _effect.View = camera.GetView();
+            Globals.GetEffect().Parameters["View"].SetValue(camera.GetView());
 
             graphicsDevice.SamplerStates[0] = SamplerState.PointClamp;
 
             var visibleChunks = GetVisibleChunks();
 
-            _visibleBlocks.Clear();
+            _vertices.Clear();
+            _indices.Clear();
 
             foreach (var chunk in visibleChunks)
             {
-                var blocks = chunk.GetVisibleBlocks();
-                foreach (var block in blocks)
-                {
-                    _visibleBlocks.Add(new(block, chunk));
-                }
+                var mesh = chunk.GetMeshData();
+                int vertexOffset = _vertices.Count;
+
+                _vertices.AddRange(mesh.Vertices);
+
+                foreach (int index in mesh.Indices)
+                    _indices.Add(index + vertexOffset);
             }
 
-            _vertices.Clear();
-            _indices.Clear();
-            var ids = 0;
-
-            var sortedBlocks = _visibleBlocks.OrderByDescending(_ => _.Item1.GetDist(_.Item2.GetPosition(), camera.GetCameraPos()));
-
-            foreach (var (block, chunk) in sortedBlocks)
-            {
-                var blockVertices = block?.GetVertices(chunk.GetPosition());
-                _vertices.AddRange(blockVertices);
-
-                for (int i = 0; i < blockVertices.Length / 4; i++)
-                {
-                    int offset = ids + i * 4;
-
-                    _indices.AddRange([
-                        offset, offset + 2, offset + 1,
-                        offset, offset + 3, offset + 2
-                    ]);
-                }
-
-                ids += blockVertices.Length;
-            }
-
-            Globals.GetHud().OnRenderData(_chunks.Count, visibleChunks.Count, _visibleBlocks.Count, _vertices.Count);
+            Globals.GetHud().OnRenderData(_chunks.Count, visibleChunks.Count, _vertices.Count);
 
             if (_vertices.Count > 0)
             {
                 var vertices = _vertices.ToArray();
                 var indices = _indices.ToArray();
 
-                foreach (EffectPass pass in _effect.CurrentTechnique.Passes)
+                foreach (EffectPass pass in Globals.GetEffect().CurrentTechnique.Passes)
                 {
                     pass.Apply();
 
@@ -294,10 +272,10 @@ namespace Minecraft.Source
                         PrimitiveType.TriangleList,
                         vertices,
                         0,
-                        _vertices.Count,
+                        vertices.Length,
                         indices,
                         0,
-                        _indices.Count / 3
+                        indices.Length / 3
                     );
                 }
             }

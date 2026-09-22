@@ -34,3 +34,11 @@
 /processorParam:Version=3.8.5.0
 /build:Images/Blocks.png
 
+#begin Shaders/Voxel.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/processorParam:Defines=
+/processorParam:Version=3.8.5.0
+/build:Shaders/Voxel.fx
+

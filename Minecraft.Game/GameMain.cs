@@ -39,7 +39,11 @@ namespace Minecraft
 
         protected override void Initialize()
         {
-            var graphicsDevice = Globals.GetGraphics().GraphicsDevice;
+            var graphics = Globals.GetGraphics();
+            var graphicsDevice = graphics.GraphicsDevice;
+
+            graphicsDevice.DepthStencilState = DepthStencilState.Default;
+            graphics.PreferredDepthStencilFormat = DepthFormat.Depth24Stencil8;
 
             Globals.SetHud(_hud = new HUD(_frameCounter = new FrameCounter()));
             Globals.SetMap(_map = new Map());
@@ -60,9 +64,18 @@ namespace Minecraft
 
         protected override void LoadContent()
         {
-            Globals.SetSpriteBatch(new SpriteBatch(Globals.GetGraphics().GraphicsDevice));
+            var graphicsDevice = Globals.GetGraphics().GraphicsDevice;
+            Globals.SetSpriteBatch(new SpriteBatch(graphicsDevice));
             Globals.SetFont(Content.Load<SpriteFont>("Fonts/Arial"));
             Globals.SetTexture(Content.Load<Texture2D>("Images/Blocks"));
+            Globals.SetEffect(Content.Load<Effect>("Shaders/Voxel"));
+
+            Globals.PROJECTION = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(60), graphicsDevice.Viewport.AspectRatio, 0.1f, 1000f);
+
+            var eff = Globals.GetEffect();
+            eff.Parameters["Texture"].SetValue(Globals.GetTexture());
+            eff.Parameters["World"].SetValue(Matrix.Identity);
+            eff.Parameters["Projection"].SetValue(Globals.PROJECTION);
         }
 
         protected override void Update(GameTime gameTime)

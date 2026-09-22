@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Minecraft.Source.Objects;
+using Minecraft.Source.Structures;
 using Minecraft.Source.UI;
 
 namespace Minecraft.Source
@@ -16,10 +17,11 @@ namespace Minecraft.Source
         private static HUD _hud;
         private static Player _player;
         private static Controlling _controlling;
-
         private readonly static FastNoiseLite _noise = new(1337);
+        private static Effect _voxelEffect;
 
-        public readonly static int SEC_TO_MS = 1000;
+        public static readonly int SEC_TO_MS = 1000;
+        public static Matrix PROJECTION;
 
         public static GraphicsDeviceManager GetGraphics() => _graphics;
         public static SpriteBatch GetSpriteBatch() => _spriteBatch;
@@ -31,6 +33,7 @@ namespace Minecraft.Source
         public static Player GetPlayer() => _player;
         public static Controlling GetControlling() => _controlling;
         public static FastNoiseLite GetNoise() => _noise;
+        public static Effect GetEffect() => _voxelEffect;
 
         public static void SetGraphics(GraphicsDeviceManager graphics)
         {
@@ -75,6 +78,11 @@ namespace Minecraft.Source
         public static void SetControlling(Controlling controlling) 
         { 
             _controlling = controlling; 
+        }
+
+        public static void SetEffect(Effect effect)
+        {
+            _voxelEffect = effect;
         }
     }
 }
