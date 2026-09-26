@@ -17,10 +17,11 @@ namespace Minecraft.Source
         private static HUD _hud;
         private static Player _player;
         private static Controlling _controlling;
-        private readonly static FastNoiseLite _noise = new(1337);
+        private readonly static FastNoiseLite _noise = new(SEED);
         private static Effect _voxelEffect;
 
-        public static readonly int SEC_TO_MS = 1000;
+        public const int SEED = 1000;
+        public const int SEC_TO_MS = 1000;
         public static Matrix PROJECTION;
 
         public static GraphicsDeviceManager GetGraphics() => _graphics;

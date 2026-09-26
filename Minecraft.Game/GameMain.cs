@@ -42,9 +42,6 @@ namespace Minecraft
             var graphics = Globals.GetGraphics();
             var graphicsDevice = graphics.GraphicsDevice;
 
-            graphicsDevice.DepthStencilState = DepthStencilState.Default;
-            graphics.PreferredDepthStencilFormat = DepthFormat.Depth24Stencil8;
-
             Globals.SetHud(_hud = new HUD(_frameCounter = new FrameCounter()));
             Globals.SetMap(_map = new Map());
             Globals.SetControlling(_controlling = new Controlling());
@@ -91,7 +88,12 @@ namespace Minecraft
 
         protected override void Draw(GameTime gameTime)
         {
-            Globals.GetGraphics().GraphicsDevice.Clear(Color.CornflowerBlue);
+            var graphics = Globals.GetGraphics();
+            var graphicsDevice = graphics.GraphicsDevice;
+
+            graphicsDevice.Clear(Color.CornflowerBlue);
+            graphicsDevice.DepthStencilState = DepthStencilState.Default;
+            graphics.PreferredDepthStencilFormat = DepthFormat.Depth24Stencil8;
 
             _map.Draw();
             _hud.Draw();

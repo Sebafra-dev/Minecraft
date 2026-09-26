@@ -9,14 +9,21 @@ namespace Minecraft.Source.Objects
         {
             Grass,
             Dirt,
-            Stone
+            Stone,
+            Wood,
+            Leaf
         }
 
-        private readonly BlockType _id;
+        private BlockType _id;
 
-        public Block(BlockType id, IntPosition position)
+        public Block(BlockType id)
         {
             _id = id;
+        }
+
+        public void SetBlockType(BlockType blockType)
+        {
+            _id = blockType;
         }
 
         private Tuple<int, int> GetIdsOnAtlas()
@@ -29,6 +36,10 @@ namespace Minecraft.Source.Objects
                     return new(3, 3);
                 case BlockType.Stone:
                     return new(2, 2);
+                case BlockType.Wood:
+                    return new(5, 4);
+                case BlockType.Leaf:
+                    return new(6, 6);
                 default:
                     break;
             }

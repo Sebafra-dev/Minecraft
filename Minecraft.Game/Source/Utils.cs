@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using System;
 
 namespace Minecraft.Source
 {
@@ -18,6 +19,14 @@ namespace Minecraft.Source
         public static int Mod(this int a, int b)
         {
             return (a % b + b) % b;
+        }
+
+        public static float GetHashOnPosition(int x, int z, int seed)
+        {
+            int hash = HashCode.Combine(x, z, seed);
+
+            uint uHash = (uint)hash;
+            return (float)uHash / uint.MaxValue;
         }
     }
 }

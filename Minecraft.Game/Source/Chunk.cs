@@ -59,17 +59,53 @@ namespace Minecraft.Source
 
                         AddBlockOnChunk(blockType, new IntPosition(globalX, y, globalZ));
                     }
+
+                    //TREE
+                    if (Utils.GetHashOnPosition(chunkX + x, chunkZ + z, Globals.SEED) < 0.004)
+                    {
+                        SwitchBlockOnChunk(BlockType.Dirt, new(globalX, terrainHeight, globalZ));
+
+                        for (int dy = 1; dy <= 5; dy++)
+                            AddBlockOnChunk(BlockType.Wood, new(globalX, terrainHeight + dy, globalZ));
+
+                        for (int dy = 0; dy < 3; dy++)
+                            for (int dx = -2; dx <= 2; dx++)
+                                for (int dz = -2; dz <= 2; dz++)
+                                {
+                                    AddBlockOnChunk(BlockType.Leaf, new(globalX + dx, terrainHeight + 5 + dy, globalZ + dz));
+                                }
+
+                        for (int dx = -1; dx <= 1; dx++)
+                            for (int dz = -1; dz <= 1; dz++)
+                            {
+                                AddBlockOnChunk(BlockType.Leaf, new(globalX + dx, terrainHeight + 5 + 3, globalZ + dz));
+                                AddBlockOnChunk(BlockType.Leaf, new(globalX + dx, terrainHeight + 5 + 3, globalZ + dz));
+                                AddBlockOnChunk(BlockType.Leaf, new(globalX + dx, terrainHeight + 5 + 3, globalZ + dz));
+                                AddBlockOnChunk(BlockType.Leaf, new(globalX + dx, terrainHeight + 5 + 3, globalZ + dz));
+                            }
+                    }
                 }
             }
         }
 
+        public void SwitchBlockOnChunk(BlockType blockType, IntPosition position)
+        {
+            var (chunkX, chunkY, chunkZ) = (position.X.Mod(WIDTH), position.Y, position.Z.Mod(DEPTH));
+
+            _blocks[chunkX, chunkY, chunkZ].SetBlockType(blockType);
+        }
+
         public void AddBlockOnChunk(BlockType blockType, IntPosition position)
         {
+            if (position.X >= _position.X * WIDTH + WIDTH || position.X < _position.X * WIDTH ||
+                position.Z >= _position.Z * DEPTH + DEPTH || position.Z < _position.Z * DEPTH)
+                return;
+
             var (chunkX, chunkY, chunkZ) = (position.X.Mod(WIDTH), position.Y, position.Z.Mod(DEPTH));
             if (IsBlock(chunkX, chunkY, chunkZ))
                 return;
 
-            _blocks[chunkX, chunkY, chunkZ] = new Block(blockType, new(chunkX, chunkY, chunkZ));
+            _blocks[chunkX, chunkY, chunkZ] = new Block(blockType);
         }
 
         public void RefreshMesh()
