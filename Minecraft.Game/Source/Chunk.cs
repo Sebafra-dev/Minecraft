@@ -1,4 +1,5 @@
-﻿using Minecraft.Source.Objects;
+﻿using Microsoft.Xna.Framework.Graphics;
+using Minecraft.Source.Objects;
 using Minecraft.Source.Structures;
 using System;
 using static Minecraft.Source.GreedyMesher;
@@ -17,7 +18,9 @@ namespace Minecraft.Source
 
         private bool _generated = false;
 
-        private MeshData _mesh;
+        public VertexBuffer VertexBuffer { get; private set; }
+        public IndexBuffer IndexBuffer { get; private set; }
+        public int IndexCount { get; private set; }
 
         public Chunk(ChunkPosition position)
         {
@@ -112,7 +115,22 @@ namespace Minecraft.Source
 
         public void RefreshMesh()
         {
-            _mesh = Build(this);
+            var graphicsDevice = Globals.GetGraphics().GraphicsDevice;
+            var mesh = Build(this);
+
+            IndexCount = mesh.Indices.Count;
+
+            if (IndexCount == 0) 
+                return;
+
+            VertexBuffer?.Dispose();
+            IndexBuffer?.Dispose();
+
+            VertexBuffer = new VertexBuffer(graphicsDevice, VoxelVertex.VertexDeclaration, mesh.Vertices.Count, BufferUsage.WriteOnly);
+            VertexBuffer.SetData(mesh.Vertices.ToArray());
+
+            IndexBuffer = new IndexBuffer(graphicsDevice, IndexElementSize.ThirtyTwoBits, mesh.Indices.Count, BufferUsage.WriteOnly);
+            IndexBuffer.SetData(mesh.Indices.ToArray());
         }
 
         private static int GetBlockIndex(int x, int y, int z) => x + (z << 4) + (y << 8);
@@ -132,7 +150,5 @@ namespace Minecraft.Source
         }
 
         public Block GetBlock(int x, int y, int z) => _blocks[GetBlockIndex(x, y, z)];
-
-        public MeshData GetMeshData() => _mesh;
     }
 }

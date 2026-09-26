@@ -16,13 +16,11 @@ namespace Minecraft.Source
     {
         private readonly Dictionary<ChunkPosition, Chunk> _chunks;
         private readonly ConcurrentBag<ChunkPosition> _visibleChunks;
-        private readonly List<VoxelVertex> _vertices;
-        private readonly List<int> _indices;
         private readonly List<Entity> _entities;
 
         private ChunkPosition? _previousPlayerChunk;
 
-        private const int RENDER_DISTANCE = 20;
+        private const int RENDER_DISTANCE = 40;
 
         private List<ChunkPosition> _chunkOrder;
         private readonly SemaphoreSlim _chunkCreationLock = new(1, 1);
@@ -31,9 +29,6 @@ namespace Minecraft.Source
         {
             _chunks = [];
             _visibleChunks = [];
-
-            _vertices = [];
-            _indices = [];
 
             _entities = [];
 
@@ -55,8 +50,6 @@ namespace Minecraft.Source
         {
             _chunks.Clear();
             _visibleChunks.Clear();
-            _vertices.Clear();
-            _indices.Clear();
             _entities.Clear();
         }
 
@@ -243,39 +236,25 @@ namespace Minecraft.Source
 
             var visibleChunks = GetVisibleChunks();
 
-            _vertices.Clear();
-            _indices.Clear();
+            Globals.GetHud().OnRenderData(_chunks.Count, visibleChunks.Count, 0);
 
-            foreach (var chunk in visibleChunks)
+            foreach (EffectPass pass in Globals.GetEffect().CurrentTechnique.Passes)
             {
-                var mesh = chunk.GetMeshData();
-                int vertexOffset = _vertices.Count;
+                pass.Apply();
 
-                _vertices.AddRange(mesh.Vertices);
-
-                foreach (int index in mesh.Indices)
-                    _indices.Add(index + vertexOffset);
-            }
-
-            Globals.GetHud().OnRenderData(_chunks.Count, visibleChunks.Count, _vertices.Count);
-
-            if (_vertices.Count > 0)
-            {
-                var vertices = _vertices.ToArray();
-                var indices = _indices.ToArray();
-
-                foreach (EffectPass pass in Globals.GetEffect().CurrentTechnique.Passes)
+                foreach (var chunk in visibleChunks)
                 {
-                    pass.Apply();
+                    if (chunk.IndexCount == 0 || chunk.VertexBuffer == null)
+                        continue;
 
-                    Globals.GetGraphics().GraphicsDevice.DrawUserIndexedPrimitives(
+                    graphicsDevice.SetVertexBuffer(chunk.VertexBuffer);
+                    graphicsDevice.Indices = chunk.IndexBuffer;
+
+                    graphicsDevice.DrawIndexedPrimitives(
                         PrimitiveType.TriangleList,
-                        vertices,
                         0,
-                        vertices.Length,
-                        indices,
                         0,
-                        indices.Length / 3
+                        chunk.IndexCount / 3
                     );
                 }
             }
