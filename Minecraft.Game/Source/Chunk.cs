@@ -135,7 +135,18 @@ namespace Minecraft.Source
 
         private static int GetBlockIndex(int x, int y, int z) => x + (z << 4) + (y << 8);
 
-        public bool IsBlock(int x, int y, int z) => y < 0 || y >= HEIGHT || !_blocks[GetBlockIndex(x, y, z)].IsEmpty;
+        public bool IsBlock(int x, int y, int z, bool ignoreTransparent = true)
+        {
+            if (y < 0 || y >= HEIGHT)
+                return false;
+
+            var block = _blocks[GetBlockIndex(x, y, z)];
+
+            if (!ignoreTransparent)
+                return block.IsTransparent;
+
+            return !block.IsEmpty;
+        }  
 
         public bool IsActive() => _generated;
 

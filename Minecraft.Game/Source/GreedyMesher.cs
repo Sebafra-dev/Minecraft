@@ -233,17 +233,17 @@ namespace Minecraft.Source
 
             return face switch
             {
-                Face.PlusX => !map.IsBlock(globalX + 1, globalY, globalZ),
+                Face.PlusX => !map.IsBlock(globalX + 1, globalY, globalZ, false),
 
-                Face.MinusX => !map.IsBlock(globalX - 1, globalY, globalZ),
+                Face.MinusX => !map.IsBlock(globalX - 1, globalY, globalZ, false),
 
-                Face.PlusY => !map.IsBlock(globalX, globalY + 1, globalZ),
+                Face.PlusY => !map.IsBlock(globalX, globalY + 1, globalZ, false),
 
-                Face.MinusY => !map.IsBlock(globalX, globalY - 1, globalZ),
+                Face.MinusY => !map.IsBlock(globalX, globalY - 1, globalZ, false),
 
-                Face.PlusZ => !map.IsBlock(globalX, globalY, globalZ + 1),
+                Face.PlusZ => !map.IsBlock(globalX, globalY, globalZ + 1, false),
 
-                Face.MinusZ => !map.IsBlock(globalX, globalY, globalZ - 1),
+                Face.MinusZ => !map.IsBlock(globalX, globalY, globalZ - 1, false),
 
                 _ => false
             };
