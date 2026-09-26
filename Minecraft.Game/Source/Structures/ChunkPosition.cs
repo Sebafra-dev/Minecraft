@@ -37,6 +37,8 @@ namespace Minecraft.Source.Structures
             return new(left.X + right.X, left.Z + right.Z);
         }
 
+        public readonly int GetDist(ChunkPosition chunkPosition2) => Math.Abs(X - chunkPosition2.X) + Math.Abs(Z - chunkPosition2.Z);
+
         public override readonly int GetHashCode()
         {
             return HashCode.Combine(X, Z);

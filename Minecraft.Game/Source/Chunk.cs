@@ -120,7 +120,7 @@ namespace Minecraft.Source
 
             IndexCount = mesh.Indices.Count;
 
-            if (IndexCount == 0) 
+            if (IndexCount == 0)
                 return;
 
             VertexBuffer?.Dispose();

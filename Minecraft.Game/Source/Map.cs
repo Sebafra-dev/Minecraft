@@ -18,7 +18,7 @@ namespace Minecraft.Source
         private readonly ConcurrentBag<ChunkPosition> _visibleChunks;
         private readonly List<Entity> _entities;
 
-        private ChunkPosition? _previousPlayerChunk;
+        public ChunkPosition? PreviousPlayerChunk;
 
         private const int RENDER_DISTANCE = 40;
 
@@ -57,7 +57,7 @@ namespace Minecraft.Source
         {
             var view = Globals.GetCamera().GetView();
 
-            BoundingFrustum frustum = new(view * Globals.PROJECTION);
+            BoundingFrustum frustum = new(view * Globals.GetProjection());
             var chunks = new List<Chunk>();
 
             foreach (var chunkId in _visibleChunks)
@@ -213,10 +213,10 @@ namespace Minecraft.Source
             var pos = Globals.GetPlayer().GetPosition();
             var chunkPos = GetChunkIdFromPos(pos);
             
-            if (_previousPlayerChunk == null || _previousPlayerChunk != chunkPos)
+            if (PreviousPlayerChunk == null || PreviousPlayerChunk != chunkPos)
             {
                 CreateChunks(pos);
-                _previousPlayerChunk = chunkPos;
+                PreviousPlayerChunk = chunkPos;
             }
 
             foreach (var entity in _entities) //TODO update per active chunk not entire map
@@ -235,8 +235,7 @@ namespace Minecraft.Source
             graphicsDevice.SamplerStates[0] = SamplerState.PointClamp;
 
             var visibleChunks = GetVisibleChunks();
-
-            Globals.GetHud().OnRenderData(_chunks.Count, visibleChunks.Count, 0);
+            var vertices = 0;
 
             foreach (EffectPass pass in Globals.GetEffect().CurrentTechnique.Passes)
             {
@@ -250,6 +249,8 @@ namespace Minecraft.Source
                     graphicsDevice.SetVertexBuffer(chunk.VertexBuffer);
                     graphicsDevice.Indices = chunk.IndexBuffer;
 
+                    vertices += chunk.VertexBuffer.VertexCount;
+
                     graphicsDevice.DrawIndexedPrimitives(
                         PrimitiveType.TriangleList,
                         0,
@@ -258,6 +259,8 @@ namespace Minecraft.Source
                     );
                 }
             }
+
+            Globals.GetHud().OnRenderData(_chunks.Count, visibleChunks.Count, vertices);
         }
     }
 }

@@ -230,20 +230,21 @@ namespace Minecraft.Source
             int globalZ = chunkPos.Z * Chunk.DEPTH + z;
 
             var map = Globals.GetMap();
+            var ignoreTransparent = chunk.GetPosition().GetDist(map.PreviousPlayerChunk.Value) <= 2;
 
             return face switch
             {
-                Face.PlusX => !map.IsBlock(globalX + 1, globalY, globalZ, false),
+                Face.PlusX => !map.IsBlock(globalX + 1, globalY, globalZ, ignoreTransparent),
 
-                Face.MinusX => !map.IsBlock(globalX - 1, globalY, globalZ, false),
+                Face.MinusX => !map.IsBlock(globalX - 1, globalY, globalZ, ignoreTransparent),
 
-                Face.PlusY => !map.IsBlock(globalX, globalY + 1, globalZ, false),
+                Face.PlusY => !map.IsBlock(globalX, globalY + 1, globalZ, ignoreTransparent),
 
-                Face.MinusY => !map.IsBlock(globalX, globalY - 1, globalZ, false),
+                Face.MinusY => !map.IsBlock(globalX, globalY - 1, globalZ, ignoreTransparent),
 
-                Face.PlusZ => !map.IsBlock(globalX, globalY, globalZ + 1, false),
+                Face.PlusZ => !map.IsBlock(globalX, globalY, globalZ + 1, ignoreTransparent),
 
-                Face.MinusZ => !map.IsBlock(globalX, globalY, globalZ - 1, false),
+                Face.MinusZ => !map.IsBlock(globalX, globalY, globalZ - 1, ignoreTransparent),
 
                 _ => false
             };

@@ -67,12 +67,12 @@ namespace Minecraft
             Globals.SetTexture(Content.Load<Texture2D>("Images/Blocks"));
             Globals.SetEffect(Content.Load<Effect>("Shaders/Voxel"));
 
-            Globals.PROJECTION = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(60), graphicsDevice.Viewport.AspectRatio, 0.1f, 1000f);
+            Globals.SetProjection(Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(60), graphicsDevice.Viewport.AspectRatio, 0.1f, 1000f));
 
             var eff = Globals.GetEffect();
             eff.Parameters["Texture"].SetValue(Globals.GetTexture());
             eff.Parameters["World"].SetValue(Matrix.Identity);
-            eff.Parameters["Projection"].SetValue(Globals.PROJECTION);
+            eff.Parameters["Projection"].SetValue(Globals.GetProjection());
         }
 
         protected override void Update(GameTime gameTime)
