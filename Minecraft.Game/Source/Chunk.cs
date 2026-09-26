@@ -12,7 +12,7 @@ namespace Minecraft.Source
         public const int HEIGHT = 256;
         public const int DEPTH = 16;
 
-        private Block[,,] _blocks;
+        private Block[] _blocks;
         private readonly ChunkPosition _position;
 
         private bool _generated = false;
@@ -23,7 +23,7 @@ namespace Minecraft.Source
         {
             _position = position;
 
-            _blocks = new Block[WIDTH, HEIGHT, DEPTH];
+            _blocks = new Block[WIDTH * HEIGHT * DEPTH];
 
             GenerateChunk();
         }
@@ -63,26 +63,7 @@ namespace Minecraft.Source
                     //TREE
                     if (Utils.GetHashOnPosition(chunkX + x, chunkZ + z, Globals.SEED) < 0.004)
                     {
-                        SwitchBlockOnChunk(BlockType.Dirt, new(globalX, terrainHeight, globalZ));
-
-                        for (int dy = 1; dy <= 5; dy++)
-                            AddBlockOnChunk(BlockType.Wood, new(globalX, terrainHeight + dy, globalZ));
-
-                        for (int dy = 0; dy < 3; dy++)
-                            for (int dx = -2; dx <= 2; dx++)
-                                for (int dz = -2; dz <= 2; dz++)
-                                {
-                                    AddBlockOnChunk(BlockType.Leaf, new(globalX + dx, terrainHeight + 5 + dy, globalZ + dz));
-                                }
-
-                        for (int dx = -1; dx <= 1; dx++)
-                            for (int dz = -1; dz <= 1; dz++)
-                            {
-                                AddBlockOnChunk(BlockType.Leaf, new(globalX + dx, terrainHeight + 5 + 3, globalZ + dz));
-                                AddBlockOnChunk(BlockType.Leaf, new(globalX + dx, terrainHeight + 5 + 3, globalZ + dz));
-                                AddBlockOnChunk(BlockType.Leaf, new(globalX + dx, terrainHeight + 5 + 3, globalZ + dz));
-                                AddBlockOnChunk(BlockType.Leaf, new(globalX + dx, terrainHeight + 5 + 3, globalZ + dz));
-                            }
+                        SpawnTree(new(globalX, terrainHeight, globalZ));
                     }
                 }
             }
@@ -92,7 +73,7 @@ namespace Minecraft.Source
         {
             var (chunkX, chunkY, chunkZ) = (position.X.Mod(WIDTH), position.Y, position.Z.Mod(DEPTH));
 
-            _blocks[chunkX, chunkY, chunkZ].SetBlockType(blockType);
+            _blocks[GetBlockIndex(chunkX, chunkY, chunkZ)].SetBlockType(blockType);
         }
 
         public void AddBlockOnChunk(BlockType blockType, IntPosition position)
@@ -105,15 +86,38 @@ namespace Minecraft.Source
             if (IsBlock(chunkX, chunkY, chunkZ))
                 return;
 
-            _blocks[chunkX, chunkY, chunkZ] = new Block(blockType);
+            _blocks[GetBlockIndex(chunkX, chunkY, chunkZ)] = new Block(blockType);
+        }
+
+        private void SpawnTree(IntPosition startPos)
+        {
+            SwitchBlockOnChunk(BlockType.Dirt, startPos);
+
+            for (int dy = 1; dy <= 5; dy++)
+                AddBlockOnChunk(BlockType.Wood, startPos + new IntPosition(0, dy, 0));
+
+            for (int dy = 0; dy < 3; dy++)
+                for (int dx = -2; dx <= 2; dx++)
+                    for (int dz = -2; dz <= 2; dz++)
+                    {
+                        AddBlockOnChunk(BlockType.Leaf, startPos + new IntPosition(dx, 5 + dy, dz));
+                    }
+
+            for (int dx = -1; dx <= 1; dx++)
+                for (int dz = -1; dz <= 1; dz++)
+                {
+                    AddBlockOnChunk(BlockType.Leaf, startPos + new IntPosition(dx, 5 + 3, dz));
+                }
         }
 
         public void RefreshMesh()
         {
             _mesh = Build(this);
-        } 
+        }
 
-        public bool IsBlock(int x, int y, int z) => y < 0 || y >= HEIGHT || _blocks[x, y, z] != null;
+        private static int GetBlockIndex(int x, int y, int z) => x + (z << 4) + (y << 8);
+
+        public bool IsBlock(int x, int y, int z) => y < 0 || y >= HEIGHT || !_blocks[GetBlockIndex(x, y, z)].IsEmpty;
 
         public bool IsActive() => _generated;
 
@@ -127,15 +131,7 @@ namespace Minecraft.Source
             _generated = true;
         }
 
-        public Block GetBlock(int x, int y, int z)
-        {
-            if (x < 0 || x >= WIDTH ||
-                y < 0 || y >= HEIGHT ||
-                z < 0 || z >= DEPTH)
-                return null;
-
-            return _blocks[x, y, z];
-        }
+        public Block GetBlock(int x, int y, int z) => _blocks[GetBlockIndex(x, y, z)];
 
         public MeshData GetMeshData() => _mesh;
     }

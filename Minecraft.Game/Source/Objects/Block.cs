@@ -3,10 +3,11 @@ using System;
 
 namespace Minecraft.Source.Objects
 {
-    public class Block
+    public struct Block
     {
         public enum BlockType : byte
         {
+            Air,
             Grass,
             Dirt,
             Stone,
@@ -18,7 +19,7 @@ namespace Minecraft.Source.Objects
 
         public Block(BlockType id)
         {
-            _id = id;
+            SetBlockType(id);
         }
 
         public void SetBlockType(BlockType blockType)
@@ -47,7 +48,9 @@ namespace Minecraft.Source.Objects
             return new(0, 0);
         }
 
-        public BlockType GetBlockType() => _id;
+        public readonly bool IsEmpty => _id == BlockType.Air;
+
+        public readonly BlockType GetBlockType() => _id;
 
         public Tuple<int, int> GetAtlasIds() => GetIdsOnAtlas();
 

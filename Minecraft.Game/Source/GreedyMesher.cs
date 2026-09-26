@@ -93,7 +93,7 @@ namespace Minecraft.Source
 
                         int index = v * width + u;
 
-                        if (block == null || !IsFaceVisible(chunk, face, x, y, z))
+                        if (block.IsEmpty || !IsFaceVisible(chunk, face, x, y, z))
                         {
                             mask[index] = default;
                             continue;

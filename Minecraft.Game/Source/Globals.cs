@@ -1,7 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Minecraft.Source.Objects;
-using Minecraft.Source.Structures;
 using Minecraft.Source.UI;
 
 namespace Minecraft.Source

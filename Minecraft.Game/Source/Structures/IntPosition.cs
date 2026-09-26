@@ -17,6 +17,11 @@ namespace Minecraft.Source.Structures
 
         public readonly Vector3 ToVec3() => new(X, Y, Z);
 
+        public static IntPosition operator +(IntPosition left, IntPosition right)
+        {
+            return new(left.X + right.X, left.Y + right.Y, left.Z + right.Z);
+        }
+
         public readonly override string ToString() => $"X: {X} Y: {Y} Z: {Z}";
     }
 }
