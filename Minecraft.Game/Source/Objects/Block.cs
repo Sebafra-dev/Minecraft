@@ -53,7 +53,7 @@ namespace Minecraft.Source.Objects
 
         public readonly BlockType GetBlockType() => _id;
 
-        public Tuple<int, int> GetAtlasIds() => GetIdsOnAtlas();
+        public readonly Tuple<int, int> GetAtlasIds() => GetIdsOnAtlas();
 
     }
 }

@@ -5,6 +5,7 @@ using Minecraft.Source.Structures;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,6 +25,7 @@ namespace Minecraft.Source
 
         private List<ChunkPosition> _chunkOrder;
         private readonly SemaphoreSlim _chunkCreationLock = new(1, 1);
+        private bool _firstChunkCreation = true;
 
         public Map()
         {
@@ -186,12 +188,15 @@ namespace Minecraft.Source
                 {
                     chunksMesh.Add(item.Chunk);
 
-                    foreach (var offset in new ChunkPosition[] { new(0, 1), new(1, 0), new(0, -1), new(-1, 0) })
+                    if (!_firstChunkCreation)
                     {
-                        if (!_chunks.TryGetValue(item.Id + offset, out var chunk2))
-                            continue;
+                        foreach (var offset in new ChunkPosition[] { new(0, 1), new(1, 0), new(0, -1), new(-1, 0) })
+                        {
+                            if (!_chunks.TryGetValue(item.Id + offset, out var chunk2))
+                                continue;
 
-                        chunksMesh.Add(chunk2);
+                            chunksMesh.Add(chunk2);
+                        }
                     }
                 }
 
@@ -201,6 +206,8 @@ namespace Minecraft.Source
                         chunk.SetActive();
                     })
                 ));
+
+                _firstChunkCreation = false;
             }
             finally
             {

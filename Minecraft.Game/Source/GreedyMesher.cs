@@ -230,7 +230,7 @@ namespace Minecraft.Source
             int globalZ = chunkPos.Z * Chunk.DEPTH + z;
 
             var map = Globals.GetMap();
-            var ignoreTransparent = chunk.GetPosition().GetDist(map.PreviousPlayerChunk.Value) <= 2;
+            var ignoreTransparent = false;
 
             return face switch
             {
