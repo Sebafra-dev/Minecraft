@@ -5,6 +5,7 @@ using Minecraft.Source.Structures;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,12 +19,13 @@ namespace Minecraft.Source
         private readonly ConcurrentBag<ChunkPosition> _visibleChunks;
         private readonly List<Entity> _entities;
 
-        private ChunkPosition? _previousPlayerChunk;
+        public ChunkPosition? PreviousPlayerChunk;
 
         private const int RENDER_DISTANCE = 40;
 
         private List<ChunkPosition> _chunkOrder;
         private readonly SemaphoreSlim _chunkCreationLock = new(1, 1);
+        private bool _firstChunkCreation = true;
 
         public ConcurrentQueue<(Chunk, GreedyMesher.MeshData)> AwaitingMeshData = [];
 
@@ -188,12 +190,15 @@ namespace Minecraft.Source
                 {
                     chunksMesh.Add(item.Chunk);
 
-                    foreach (var offset in new ChunkPosition[] { new(0, 1), new(1, 0), new(0, -1), new(-1, 0) })
+                    if (!_firstChunkCreation)
                     {
-                        if (!_chunks.TryGetValue(item.Id + offset, out var chunk2))
-                            continue;
+                        foreach (var offset in new ChunkPosition[] { new(0, 1), new(1, 0), new(0, -1), new(-1, 0) })
+                        {
+                            if (!_chunks.TryGetValue(item.Id + offset, out var chunk2))
+                                continue;
 
-                        chunksMesh.Add(chunk2);
+                            chunksMesh.Add(chunk2);
+                        }
                     }
                 }
 
@@ -203,6 +208,8 @@ namespace Minecraft.Source
                         chunk.SetActive();
                     })
                 ));
+
+                _firstChunkCreation = false;
             }
             finally
             {
@@ -221,10 +228,10 @@ namespace Minecraft.Source
                 meshData.Item1.UpdateMeshData(meshData.Item2);
             }
             
-            if (_previousPlayerChunk == null || _previousPlayerChunk != chunkPos)
+            if (PreviousPlayerChunk == null || PreviousPlayerChunk != chunkPos)
             {
                 CreateChunks(pos);
-                _previousPlayerChunk = chunkPos;
+                PreviousPlayerChunk = chunkPos;
             }
 
             foreach (var entity in _entities) //TODO update per active chunk not entire map
@@ -243,8 +250,7 @@ namespace Minecraft.Source
             graphicsDevice.SamplerStates[0] = SamplerState.PointClamp;
 
             var visibleChunks = GetVisibleChunks();
-
-            Globals.GetHud().OnRenderData(_chunks.Count, visibleChunks.Count, 0);
+            var vertices = 0;
 
             foreach (EffectPass pass in Globals.GetEffect().CurrentTechnique.Passes)
             {
@@ -258,6 +264,8 @@ namespace Minecraft.Source
                     graphicsDevice.SetVertexBuffer(chunk.VertexBuffer);
                     graphicsDevice.Indices = chunk.IndexBuffer;
 
+                    vertices += chunk.VertexBuffer.VertexCount;
+
                     graphicsDevice.DrawIndexedPrimitives(
                         PrimitiveType.TriangleList,
                         0,
@@ -266,6 +274,8 @@ namespace Minecraft.Source
                     );
                 }
             }
+
+            Globals.GetHud().OnRenderData(_chunks.Count, visibleChunks.Count, vertices);
         }
     }
 }

@@ -230,7 +230,7 @@ namespace Minecraft.Source
             int globalZ = chunkPos.Z * Chunk.DEPTH + z;
 
             var map = Globals.GetMap();
-
+          
             return face switch
             {
                 Face.PlusX => !map.IsBlock(globalX + 1, globalY, globalZ, true),

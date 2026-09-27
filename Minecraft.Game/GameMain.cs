@@ -94,6 +94,7 @@ namespace Minecraft
             graphicsDevice.Clear(Color.CornflowerBlue);
             graphicsDevice.DepthStencilState = DepthStencilState.Default;
             graphics.PreferredDepthStencilFormat = DepthFormat.Depth24Stencil8;
+            graphicsDevice.BlendState = BlendState.AlphaBlend;
 
             _map.Draw();
             _hud.Draw();
