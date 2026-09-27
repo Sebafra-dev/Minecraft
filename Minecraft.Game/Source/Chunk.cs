@@ -121,14 +121,14 @@ namespace Minecraft.Source
 
             IndexCount = mesh.Indices.Count;
 
+            VertexBuffer?.Dispose();
+            IndexBuffer?.Dispose();
+
             if (IndexCount == 0)
             {
                 Debug.WriteLine($"EMPTY MESH {_position}");
                 return;
             }
-
-            VertexBuffer?.Dispose();
-            IndexBuffer?.Dispose();
 
             VertexBuffer = new VertexBuffer(graphicsDevice, VoxelVertex.VertexDeclaration, mesh.Vertices.Count, BufferUsage.WriteOnly);
             VertexBuffer.SetData(mesh.Vertices.ToArray());
@@ -139,17 +139,20 @@ namespace Minecraft.Source
 
         private static int GetBlockIndex(int x, int y, int z) => x + (z << 4) + (y << 8);
 
-        public bool IsBlock(int x, int y, int z, bool ignoreTransparent = true)
+        public bool IsBlock(int x, int y, int z, bool checkTransparent = false)
         {
             if (y < 0 || y >= HEIGHT)
                 return false;
 
-            var block = _blocks[GetBlockIndex(x, y, z)];
+            var block = GetBlock(x, y, z);
 
-            if (!ignoreTransparent)
+            if (block.IsEmpty)
+                return false;
+
+            if (checkTransparent)
                 return block.IsTransparent;
 
-            return !block.IsEmpty;
+            return true;
         }  
 
         public bool IsActive() => _generated;

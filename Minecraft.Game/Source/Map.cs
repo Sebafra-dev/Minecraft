@@ -99,13 +99,13 @@ namespace Minecraft.Source
             chunk.AddBlockOnChunk(blockType, position);
         }
 
-        public bool IsBlock(int x, int y, int z, bool ignoreTransparent = true)
+        public bool IsBlock(int x, int y, int z, bool checkTransparent = false)
         {
             Chunk chunk;
             if ((chunk = GetChunkOnPos(new IntPosition(x, y, z))) == null) 
                 return false;
 
-            return chunk.IsBlock(x.Mod(Chunk.WIDTH), y, z.Mod(Chunk.DEPTH), ignoreTransparent);
+            return chunk.IsBlock(x.Mod(Chunk.WIDTH), y, z.Mod(Chunk.DEPTH), checkTransparent);
         }
 
         public Chunk GetChunkOnPos(float x, float y, float z) => GetChunkOnPos(new Vector3(x, y, z));

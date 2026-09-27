@@ -41,7 +41,7 @@ namespace Minecraft.Source.Objects
             var map = Globals.GetMap();
             float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-            if (_pos.Y < 0 || _pos.Y >= Chunk.HEIGHT || !map.IsBlock((int)_pos.X, (int)_pos.Y - 2, (int)_pos.Z))
+            if (!map.IsBlock((int)_pos.X, (int)_pos.Y - 2, (int)_pos.Z))
             {
                 Move(0, -10f * deltaTime, 0);
             }
