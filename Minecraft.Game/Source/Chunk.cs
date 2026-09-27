@@ -116,19 +116,20 @@ namespace Minecraft.Source
 
         public void RefreshMesh()
         {
-            var graphicsDevice = Globals.GetGraphics().GraphicsDevice;
-            var mesh = Build(this);
+            Globals.GetMap().AwaitingMeshData.Enqueue((this, Build(this)));
+        }
 
-            IndexCount = mesh.Indices.Count;
+        public void UpdateMeshData(MeshData mesh)
+        {
+            var graphicsDevice = Globals.GetGraphics().GraphicsDevice;
 
             VertexBuffer?.Dispose();
             IndexBuffer?.Dispose();
 
+            IndexCount = mesh.Indices.Count;
+
             if (IndexCount == 0)
-            {
-                Debug.WriteLine($"EMPTY MESH {_position}");
                 return;
-            }
 
             VertexBuffer = new VertexBuffer(graphicsDevice, VoxelVertex.VertexDeclaration, mesh.Vertices.Count, BufferUsage.WriteOnly);
             VertexBuffer.SetData(mesh.Vertices.ToArray());
@@ -146,14 +147,14 @@ namespace Minecraft.Source
 
             var block = GetBlock(x, y, z);
 
-            if (block.IsEmpty)
+            if (block.IsEmpty())
                 return false;
 
-            if (checkTransparent)
-                return block.IsTransparent;
+            if (checkTransparent && block.IsTransparent()) 
+                return false;
 
             return true;
-        }  
+        }
 
         public bool IsActive() => _generated;
 

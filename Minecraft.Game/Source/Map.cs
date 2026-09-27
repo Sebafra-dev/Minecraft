@@ -27,6 +27,8 @@ namespace Minecraft.Source
         private readonly SemaphoreSlim _chunkCreationLock = new(1, 1);
         private bool _firstChunkCreation = true;
 
+        public ConcurrentQueue<(Chunk, GreedyMesher.MeshData)> AwaitingMeshData = [];
+
         public Map()
         {
             _chunks = [];
@@ -219,6 +221,12 @@ namespace Minecraft.Source
         {
             var pos = Globals.GetPlayer().GetPosition();
             var chunkPos = GetChunkIdFromPos(pos);
+            var graphicsDevice = Globals.GetGraphics().GraphicsDevice;
+
+            while (AwaitingMeshData.TryDequeue(out var meshData))
+            {
+                meshData.Item1.UpdateMeshData(meshData.Item2);
+            }
             
             if (PreviousPlayerChunk == null || PreviousPlayerChunk != chunkPos)
             {

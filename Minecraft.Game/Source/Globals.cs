@@ -76,9 +76,9 @@ namespace Minecraft.Source
             _player = player;
         }
 
-        public static void SetControlling(Controlling controlling) 
-        { 
-            _controlling = controlling; 
+        public static void SetControlling(Controlling controlling)
+        {
+            _controlling = controlling;
         }
 
         public static void SetEffect(Effect effect)
