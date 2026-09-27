@@ -27,7 +27,7 @@ namespace Minecraft.Source.Objects
             _id = blockType;
         }
 
-        private Tuple<int, int> GetIdsOnAtlas()
+        public readonly Tuple<int, int> GetAtlasIds()
         {
             switch (_id)
             {
@@ -48,11 +48,10 @@ namespace Minecraft.Source.Objects
             return new(0, 0);
         }
 
-        public readonly bool IsEmpty => _id == BlockType.Air;
+        public readonly bool IsEmpty() => _id == BlockType.Air;
+        public readonly bool IsTransparent() => _id == BlockType.Leaf;
 
         public readonly BlockType GetBlockType() => _id;
-
-        public Tuple<int, int> GetAtlasIds() => GetIdsOnAtlas();
 
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
 namespace Minecraft.Source
@@ -12,7 +13,7 @@ namespace Minecraft.Source
         private float _pitch = 0f;
         private readonly float _moveSpeed = 10f;
         private readonly float _moveSpeedNoClip = 30f;
-        private readonly float _mouseSensitivity = 0.01f;
+        private readonly float _mouseSensitivity = 0.004f;
         public static bool NoClip = false;
 
         public Controlling()
@@ -45,7 +46,6 @@ namespace Minecraft.Source
             Vector3 right = Vector3.Cross(forward, Vector3.Up);
             right.Normalize();
 
-            var camera = Globals.GetCamera();
             var player = Globals.GetPlayer();
 
             var ctrl = _keyboardState.IsKeyDown(Keys.LeftControl);
@@ -102,19 +102,25 @@ namespace Minecraft.Source
             if (_keyboardState.IsKeyDown(Keys.Escape))
                 GameMain.Instance.Exit();
 
-            int mouseX = _mouseState.X - graphicsDevice.Viewport.Width / 2;
-            int mouseY = _mouseState.Y - graphicsDevice.Viewport.Height / 2;
+            int centerX = graphicsDevice.Viewport.Width / 2;
+            int centerY = graphicsDevice.Viewport.Height / 2;
 
-            _yaw -= mouseX * _mouseSensitivity;
-            _pitch -= mouseY * _mouseSensitivity;
+            float deltaX = _mouseState.X - centerX;
+            float deltaY = _mouseState.Y - centerY;
 
-            Mouse.SetPosition(graphicsDevice.Viewport.Width / 2, graphicsDevice.Viewport.Height / 2);
+            if (deltaX != 0 || deltaY != 0)
+            {
+                _yaw -= deltaX * _mouseSensitivity;
+                _pitch -= deltaY * _mouseSensitivity;
 
-            _pitch = MathHelper.Clamp(
-                _pitch,
-                -MathHelper.PiOver2 + 0.01f,
-                MathHelper.PiOver2 - 0.01f
-            );
+                _pitch = MathHelper.Clamp(
+                    _pitch,
+                    -MathHelper.PiOver2 + 0.01f,
+                    MathHelper.PiOver2 - 0.01f
+                );
+
+                Mouse.SetPosition(centerX, centerY);
+            }
         }
     }
 }

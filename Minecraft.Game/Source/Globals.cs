@@ -18,10 +18,10 @@ namespace Minecraft.Source
         private static Controlling _controlling;
         private readonly static FastNoiseLite _noise = new(SEED);
         private static Effect _voxelEffect;
+        private static Matrix _projection;
 
         public const int SEED = 1000;
         public const int SEC_TO_MS = 1000;
-        public static Matrix PROJECTION;
 
         public static GraphicsDeviceManager GetGraphics() => _graphics;
         public static SpriteBatch GetSpriteBatch() => _spriteBatch;
@@ -34,6 +34,7 @@ namespace Minecraft.Source
         public static Controlling GetControlling() => _controlling;
         public static FastNoiseLite GetNoise() => _noise;
         public static Effect GetEffect() => _voxelEffect;
+        public static Matrix GetProjection() => _projection;
 
         public static void SetGraphics(GraphicsDeviceManager graphics)
         {
@@ -75,14 +76,19 @@ namespace Minecraft.Source
             _player = player;
         }
 
-        public static void SetControlling(Controlling controlling) 
-        { 
-            _controlling = controlling; 
+        public static void SetControlling(Controlling controlling)
+        {
+            _controlling = controlling;
         }
 
         public static void SetEffect(Effect effect)
         {
             _voxelEffect = effect;
+        }
+
+        public static void SetProjection(Matrix projection)
+        {
+            _projection = projection;
         }
     }
 }

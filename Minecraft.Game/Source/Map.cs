@@ -57,7 +57,7 @@ namespace Minecraft.Source
         {
             var view = Globals.GetCamera().GetView();
 
-            BoundingFrustum frustum = new(view * Globals.PROJECTION);
+            BoundingFrustum frustum = new(view * Globals.GetProjection());
             var chunks = new List<Chunk>();
 
             foreach (var chunkId in _visibleChunks)
