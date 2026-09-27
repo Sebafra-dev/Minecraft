@@ -115,16 +115,20 @@ namespace Minecraft.Source
 
         public void RefreshMesh()
         {
+            Globals.GetMap().AwaitingMeshData.Enqueue((this, Build(this)));
+        }
+
+        public void UpdateMeshData(MeshData mesh)
+        {
             var graphicsDevice = Globals.GetGraphics().GraphicsDevice;
-            var mesh = Build(this);
-
-            IndexCount = mesh.Indices.Count;
-
-            if (IndexCount == 0) 
-                return;
 
             VertexBuffer?.Dispose();
             IndexBuffer?.Dispose();
+
+            IndexCount = mesh.Indices.Count;
+
+            if (IndexCount == 0)
+                return;
 
             VertexBuffer = new VertexBuffer(graphicsDevice, VoxelVertex.VertexDeclaration, mesh.Vertices.Count, BufferUsage.WriteOnly);
             VertexBuffer.SetData(mesh.Vertices.ToArray());
@@ -135,7 +139,7 @@ namespace Minecraft.Source
 
         private static int GetBlockIndex(int x, int y, int z) => x + (z << 4) + (y << 8);
 
-        public bool IsBlock(int x, int y, int z)
+        public bool IsBlock(int x, int y, int z, bool checkTransparent = false)
         {
             if (y < 0 || y >= HEIGHT)
                 return false;
@@ -145,7 +149,7 @@ namespace Minecraft.Source
             if (block.IsEmpty())
                 return false;
 
-            if (block.IsTransparent()) 
+            if (checkTransparent && block.IsTransparent()) 
                 return false;
 
             return true;

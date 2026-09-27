@@ -24,7 +24,7 @@ namespace Minecraft
                 IsFullScreen = false,
                 PreferredBackBufferWidth = 1920,
                 PreferredBackBufferHeight = 1080,
-                SynchronizeWithVerticalRetrace = false,
+                SynchronizeWithVerticalRetrace = true,
                 PreferMultiSampling = false,
                 GraphicsProfile = GraphicsProfile.HiDef
             });

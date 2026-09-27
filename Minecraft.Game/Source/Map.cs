@@ -25,6 +25,8 @@ namespace Minecraft.Source
         private List<ChunkPosition> _chunkOrder;
         private readonly SemaphoreSlim _chunkCreationLock = new(1, 1);
 
+        public ConcurrentQueue<(Chunk, GreedyMesher.MeshData)> AwaitingMeshData = [];
+
         public Map()
         {
             _chunks = [];
@@ -97,13 +99,13 @@ namespace Minecraft.Source
             chunk.AddBlockOnChunk(blockType, position);
         }
 
-        public bool IsBlock(int x, int y, int z)
+        public bool IsBlock(int x, int y, int z, bool checkTransparent = false)
         {
             Chunk chunk;
             if ((chunk = GetChunkOnPos(new IntPosition(x, y, z))) == null) 
                 return false;
 
-            return chunk.IsBlock(x.Mod(Chunk.WIDTH), y, z.Mod(Chunk.DEPTH));
+            return chunk.IsBlock(x.Mod(Chunk.WIDTH), y, z.Mod(Chunk.DEPTH), checkTransparent);
         }
 
         public Chunk GetChunkOnPos(float x, float y, float z) => GetChunkOnPos(new Vector3(x, y, z));
@@ -212,6 +214,12 @@ namespace Minecraft.Source
         {
             var pos = Globals.GetPlayer().GetPosition();
             var chunkPos = GetChunkIdFromPos(pos);
+            var graphicsDevice = Globals.GetGraphics().GraphicsDevice;
+
+            while (AwaitingMeshData.TryDequeue(out var meshData))
+            {
+                meshData.Item1.UpdateMeshData(meshData.Item2);
+            }
             
             if (_previousPlayerChunk == null || _previousPlayerChunk != chunkPos)
             {
