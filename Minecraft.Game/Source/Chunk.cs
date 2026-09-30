@@ -2,7 +2,6 @@
 using Minecraft.Source.Objects;
 using Minecraft.Source.Structures;
 using System;
-using System.Diagnostics;
 using static Minecraft.Source.GreedyMesher;
 using static Minecraft.Source.Objects.Block;
 
@@ -65,9 +64,24 @@ namespace Minecraft.Source
                     }
 
                     //TREE
-                    if (Utils.GetHashOnPosition(chunkX + x, chunkZ + z, Globals.SEED) < 0.004)
+                    if (Utils.GetHashOnPosition(globalX, globalZ, Globals.SEED) < 0.004)
                     {
                         SpawnTree(new(globalX, terrainHeight, globalZ));
+                    }
+                    //RED FLOWER
+                    else if (Utils.GetHashOnPosition(globalX, globalZ, Globals.SEED) < 0.008)
+                    {
+                        AddBlockOnChunk(BlockType.RedFlower, new(globalX, terrainHeight + 1, globalZ));
+                    }
+                    //YELLOW FLOWER
+                    else if (Utils.GetHashOnPosition(globalX, globalZ, Globals.SEED) < 0.012)
+                    {
+                        AddBlockOnChunk(BlockType.YellowFlower, new(globalX, terrainHeight + 1, globalZ));
+                    }
+                    //SMALL GRASS
+                    else if (Utils.GetHashOnPosition(globalX, globalZ, Globals.SEED) < 0.024)
+                    {
+                        AddBlockOnChunk(BlockType.SmallGrass, new(globalX, terrainHeight + 1, globalZ));
                     }
                 }
             }
@@ -146,11 +160,15 @@ namespace Minecraft.Source
                 return false;
 
             var block = GetBlock(x, y, z);
+            var blockProperties = block.GetProperties();
 
-            if (block.IsEmpty())
+            if (blockProperties.Object)
                 return false;
 
-            if (checkTransparent && block.IsTransparent()) 
+            if (!blockProperties.Visible)
+                return false;
+
+            if (checkTransparent && blockProperties.Transparent) 
                 return false;
 
             return true;

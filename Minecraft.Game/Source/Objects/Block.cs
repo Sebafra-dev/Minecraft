@@ -12,7 +12,10 @@ namespace Minecraft.Source.Objects
             Dirt,
             Stone,
             Wood,
-            Leaf
+            Leaf,
+            RedFlower,
+            YellowFlower,
+            SmallGrass
         }
 
         private BlockType _id;
@@ -26,6 +29,8 @@ namespace Minecraft.Source.Objects
         {
             _id = blockType;
         }
+
+        public readonly BlockType GetBlockType() => _id;
 
         public readonly Tuple<int, int> GetAtlasIds()
         {
@@ -41,6 +46,12 @@ namespace Minecraft.Source.Objects
                     return new(5, 4);
                 case BlockType.Leaf:
                     return new(6, 6);
+                case BlockType.RedFlower:
+                    return new(7, 7);
+                case BlockType.YellowFlower:
+                    return new(8, 8);
+                case BlockType.SmallGrass:
+                    return new(9, 9);
                 default:
                     break;
             }
@@ -48,10 +59,7 @@ namespace Minecraft.Source.Objects
             return new(0, 0);
         }
 
-        public readonly bool IsEmpty() => _id == BlockType.Air;
-        public readonly bool IsTransparent() => _id == BlockType.Leaf;
-
-        public readonly BlockType GetBlockType() => _id;
+        public readonly BlockProperties GetProperties() => BlockProperties.Blocks[GetBlockType()];
 
     }
 }

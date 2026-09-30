@@ -1,7 +1,9 @@
 ﻿using Microsoft.Xna.Framework;
 using Minecraft.Source.Objects;
 using Minecraft.Source.Structures;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Minecraft.Source
 {
@@ -43,7 +45,27 @@ namespace Minecraft.Source
             BuildFace(chunk, mesh, Face.PlusZ);
             BuildFace(chunk, mesh, Face.MinusZ);
 
+            BuildObjects(chunk, mesh);
+
             return mesh;
+        }
+
+        private static void BuildObjects(Chunk chunk, MeshData mesh)
+        {
+            for (int x = 0; x < Chunk.WIDTH; x++)
+            {
+                for (int y = 0; y < Chunk.HEIGHT; y++)
+                {
+                    for (int z = 0; z < Chunk.DEPTH; z++)
+                    {
+                        Block block = chunk.GetBlock(x, y, z);
+                        if (!block.GetProperties().Object)
+                            continue;
+
+                        AddObject(chunk, mesh, block, x, y, z);
+                    }
+                }
+            }
         }
 
         private static void BuildFace(Chunk chunk, MeshData mesh, Face face)
@@ -82,7 +104,6 @@ namespace Minecraft.Source
 
             for (int slice = 0; slice < slices; slice++)
             {
-
                 for (int v = 0; v < height; v++)
                 {
                     for (int u = 0; u < width; u++)
@@ -90,10 +111,11 @@ namespace Minecraft.Source
                         GetCoordinates(face, slice, u, v, out int x, out int y, out int z);
 
                         Block block = chunk.GetBlock(x, y, z);
+                        var blockProperties = block.GetProperties();
 
                         int index = v * width + u;
 
-                        if (block.IsEmpty() || !IsFaceVisible(chunk, face, x, y, z))
+                        if (!blockProperties.Visible || blockProperties.Object || !IsFaceVisible(chunk, face, x, y, z))
                         {
                             mask[index] = default;
                             continue;
@@ -136,8 +158,7 @@ namespace Minecraft.Source
 
                             for (int x = 0; x < rectWidth; x++)
                             {
-                                MaskCell test =
-                                    mask[(v + rectHeight) * width + u + x];
+                                MaskCell test = mask[(v + rectHeight) * width + u + x];
 
                                 if (!Same(test, cell))
                                 {
@@ -247,6 +268,135 @@ namespace Minecraft.Source
 
                 _ => false
             };
+        }
+
+        private static void AddObject(Chunk chunk, MeshData mesh, Block block,  int x, int y, int z)
+        {
+            var ids = block.GetAtlasIds();
+
+            Vector2 uv = Utils.GetUV(ids.Item2);
+
+            ChunkPosition chunkPos = chunk.GetPosition();
+
+            int globalX = chunkPos.X * Chunk.WIDTH + x;
+            int globalY = y;
+            int globalZ = chunkPos.Z * Chunk.DEPTH + z;
+
+            int vertexOffset = mesh.Vertices.Count; // 1
+
+            mesh.Vertices.Add(new VoxelVertex
+            {
+                Position = new Vector3(
+                    globalX,
+                    globalY,
+                    globalZ + 1),
+                AtlasUV = uv,
+                TileUV = new Vector2(1, 1)
+            });
+
+            mesh.Vertices.Add(new VoxelVertex
+            {
+                Position = new Vector3(
+                    globalX + 1,
+                    globalY,
+                    globalZ),
+                AtlasUV = uv,
+                TileUV = new Vector2(0, 1)
+            });
+
+            mesh.Vertices.Add(new VoxelVertex
+            {
+                Position = new Vector3(
+                    globalX,
+                    globalY + 1,
+                    globalZ + 1),
+                AtlasUV = uv,
+                TileUV = new Vector2(1, 0)
+            });
+
+            mesh.Vertices.Add(new VoxelVertex
+            {
+                Position = new Vector3(
+                    globalX + 1,
+                    globalY + 1,
+                    globalZ),
+                AtlasUV = uv,
+                TileUV = new Vector2(0, 0)
+            });
+
+            mesh.Indices.Add(vertexOffset);
+            mesh.Indices.Add(vertexOffset + 1);
+            mesh.Indices.Add(vertexOffset + 2);
+
+            mesh.Indices.Add(vertexOffset + 1);
+            mesh.Indices.Add(vertexOffset + 3);
+            mesh.Indices.Add(vertexOffset + 2);
+
+            mesh.Indices.Add(vertexOffset + 2);
+            mesh.Indices.Add(vertexOffset + 1);
+            mesh.Indices.Add(vertexOffset);
+
+            mesh.Indices.Add(vertexOffset + 2);
+            mesh.Indices.Add(vertexOffset + 3);
+            mesh.Indices.Add(vertexOffset + 1);
+
+            vertexOffset = mesh.Vertices.Count; // 2
+
+            mesh.Vertices.Add(new VoxelVertex
+            {
+                Position = new Vector3(
+                    globalX,
+                    globalY,
+                    globalZ),
+                AtlasUV = uv,
+                TileUV = new Vector2(1, 1)
+            });
+
+            mesh.Vertices.Add(new VoxelVertex
+            {
+                Position = new Vector3(
+                    globalX + 1,
+                    globalY,
+                    globalZ + 1),
+                AtlasUV = uv,
+                TileUV = new Vector2(0, 1)
+            });
+
+            mesh.Vertices.Add(new VoxelVertex
+            {
+                Position = new Vector3(
+                    globalX,
+                    globalY + 1,
+                    globalZ),
+                AtlasUV = uv,
+                TileUV = new Vector2(1, 0)
+            });
+
+            mesh.Vertices.Add(new VoxelVertex
+            {
+                Position = new Vector3(
+                    globalX + 1,
+                    globalY + 1,
+                    globalZ + 1),
+                AtlasUV = uv,
+                TileUV = new Vector2(0, 0)
+            });
+
+            mesh.Indices.Add(vertexOffset);
+            mesh.Indices.Add(vertexOffset + 2);
+            mesh.Indices.Add(vertexOffset + 1);
+
+            mesh.Indices.Add(vertexOffset + 1);
+            mesh.Indices.Add(vertexOffset + 2);
+            mesh.Indices.Add(vertexOffset + 3);
+
+            mesh.Indices.Add(vertexOffset + 1);
+            mesh.Indices.Add(vertexOffset + 2);
+            mesh.Indices.Add(vertexOffset);
+
+            mesh.Indices.Add(vertexOffset + 3);
+            mesh.Indices.Add(vertexOffset + 2);
+            mesh.Indices.Add(vertexOffset + 1);
         }
 
         private static void AddQuad(
