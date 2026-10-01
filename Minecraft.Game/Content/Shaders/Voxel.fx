@@ -29,6 +29,7 @@ struct VertexShaderInput
     float4 Position : POSITION0;
     float2 AtlasUV : TEXCOORD0;
     float2 TileUV : TEXCOORD1;
+    float Alpha : TEXCOORD2;
 };
 
 
@@ -37,6 +38,7 @@ struct VertexShaderOutput
     float4 Position : SV_POSITION;
     float2 AtlasUV : TEXCOORD0;
     float2 TileUV : TEXCOORD1;
+    float Alpha : TEXCOORD2;
 };
 
 
@@ -51,6 +53,7 @@ VertexShaderOutput MainVS(VertexShaderInput input)
 
     output.AtlasUV = input.AtlasUV;
     output.TileUV = input.TileUV;
+    output.Alpha = input.Alpha;
 
     return output;
 }
@@ -66,11 +69,14 @@ float4 MainPS(VertexShaderOutput input) : SV_TARGET
     );
 
     float2 uv = input.AtlasUV + tileUV * tileSize;
-    
-    float4 color = Texture.Sample(TextureSampler, uv);
-    clip(color.a - 0.5);
 
-    return Texture.Sample(TextureSampler, uv);
+    float4 color = Texture.Sample(TextureSampler, uv);
+
+    color.a *= input.Alpha;
+    
+    clip(color.a - 0.1);
+
+    return color;
 }
 
 

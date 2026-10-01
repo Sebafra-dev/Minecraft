@@ -1,8 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Minecraft.Source.Structures
 {
@@ -11,6 +8,7 @@ namespace Minecraft.Source.Structures
         public Vector3 Position;
         public Vector2 AtlasUV;
         public Vector2 TileUV;
+        public float Alpha;
 
         public static readonly VertexDeclaration VertexDeclaration =
             new(
@@ -30,7 +28,12 @@ namespace Minecraft.Source.Structures
                     20,
                     VertexElementFormat.Vector2,
                     VertexElementUsage.TextureCoordinate,
-                    1)
+                    1),
+                new VertexElement(
+                    28,
+                    VertexElementFormat.Single,
+                    VertexElementUsage.TextureCoordinate,
+                    2)
             );
 
         readonly VertexDeclaration IVertexType.VertexDeclaration =>

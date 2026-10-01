@@ -1,9 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Minecraft.Source.Objects;
 using Minecraft.Source.Structures;
-using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using static Minecraft.Source.BlockProperties;
 
 namespace Minecraft.Source
@@ -252,20 +250,26 @@ namespace Minecraft.Source
             int globalZ = chunkPos.Z * Chunk.DEPTH + z;
 
             var map = Globals.GetMap();
+
+            Block block = map.GetBlock(globalX, globalY, globalZ);
+
+            var checkTransparent = true;
+            if (block.GetProperties().Liquid)
+                checkTransparent = false;
           
             return face switch
             {
-                Face.PlusX => !map.IsBlock(globalX + 1, globalY, globalZ, true),
+                Face.PlusX => !map.IsBlock(globalX + 1, globalY, globalZ, checkTransparent),
 
-                Face.MinusX => !map.IsBlock(globalX - 1, globalY, globalZ, true),
+                Face.MinusX => !map.IsBlock(globalX - 1, globalY, globalZ, checkTransparent),
 
-                Face.PlusY => !map.IsBlock(globalX, globalY + 1, globalZ, true),
+                Face.PlusY => !map.IsBlock(globalX, globalY + 1, globalZ, checkTransparent),
 
-                Face.MinusY => !map.IsBlock(globalX, globalY - 1, globalZ, true),
+                Face.MinusY => !map.IsBlock(globalX, globalY - 1, globalZ, checkTransparent),
 
-                Face.PlusZ => !map.IsBlock(globalX, globalY, globalZ + 1, true),
+                Face.PlusZ => !map.IsBlock(globalX, globalY, globalZ + 1, checkTransparent),
 
-                Face.MinusZ => !map.IsBlock(globalX, globalY, globalZ - 1, true),
+                Face.MinusZ => !map.IsBlock(globalX, globalY, globalZ - 1, checkTransparent),
 
                 _ => false
             };
@@ -276,6 +280,7 @@ namespace Minecraft.Source
             var ids = block.GetAtlasIds();
 
             Vector2 uv = Utils.GetUV(ids.Item2);
+            var alpha = block.GetProperties().Alpha;
 
             ChunkPosition chunkPos = chunk.GetPosition();
 
@@ -292,7 +297,8 @@ namespace Minecraft.Source
                     globalY,
                     globalZ + 1),
                 AtlasUV = uv,
-                TileUV = new Vector2(1, 1)
+                TileUV = new Vector2(1, 1),
+                Alpha = alpha
             });
 
             mesh.Vertices.Add(new VoxelVertex
@@ -302,7 +308,8 @@ namespace Minecraft.Source
                     globalY,
                     globalZ),
                 AtlasUV = uv,
-                TileUV = new Vector2(0, 1)
+                TileUV = new Vector2(0, 1),
+                Alpha = alpha
             });
 
             mesh.Vertices.Add(new VoxelVertex
@@ -312,7 +319,8 @@ namespace Minecraft.Source
                     globalY + 1,
                     globalZ + 1),
                 AtlasUV = uv,
-                TileUV = new Vector2(1, 0)
+                TileUV = new Vector2(1, 0),
+                Alpha = alpha
             });
 
             mesh.Vertices.Add(new VoxelVertex
@@ -322,7 +330,8 @@ namespace Minecraft.Source
                     globalY + 1,
                     globalZ),
                 AtlasUV = uv,
-                TileUV = new Vector2(0, 0)
+                TileUV = new Vector2(0, 0),
+                Alpha = alpha
             });
 
             mesh.Indices.Add(vertexOffset);
@@ -350,7 +359,8 @@ namespace Minecraft.Source
                     globalY,
                     globalZ),
                 AtlasUV = uv,
-                TileUV = new Vector2(1, 1)
+                TileUV = new Vector2(1, 1),
+                Alpha = alpha
             });
 
             mesh.Vertices.Add(new VoxelVertex
@@ -360,7 +370,8 @@ namespace Minecraft.Source
                     globalY,
                     globalZ + 1),
                 AtlasUV = uv,
-                TileUV = new Vector2(0, 1)
+                TileUV = new Vector2(0, 1),
+                Alpha = alpha
             });
 
             mesh.Vertices.Add(new VoxelVertex
@@ -370,7 +381,8 @@ namespace Minecraft.Source
                     globalY + 1,
                     globalZ),
                 AtlasUV = uv,
-                TileUV = new Vector2(1, 0)
+                TileUV = new Vector2(1, 0),
+                Alpha = alpha
             });
 
             mesh.Vertices.Add(new VoxelVertex
@@ -380,7 +392,8 @@ namespace Minecraft.Source
                     globalY + 1,
                     globalZ + 1),
                 AtlasUV = uv,
-                TileUV = new Vector2(0, 0)
+                TileUV = new Vector2(0, 0),
+                Alpha = alpha
             });
 
             mesh.Indices.Add(vertexOffset);
@@ -514,6 +527,8 @@ namespace Minecraft.Source
             else
                 uv = Utils.GetUV(ids.Item2);
 
+            var alpha = block.GetProperties().Alpha;
+
             int vertexOffset = mesh.Vertices.Count;
 
             mesh.Vertices.Add(
@@ -521,7 +536,8 @@ namespace Minecraft.Source
                 {
                     Position = a,
                     AtlasUV = uv,
-                    TileUV = new Vector2(width, height)
+                    TileUV = new Vector2(width, height),
+                    Alpha = alpha
                 }
             );
 
@@ -530,7 +546,8 @@ namespace Minecraft.Source
                 {
                     Position = b,
                     AtlasUV = uv,
-                    TileUV = new Vector2(0, height)
+                    TileUV = new Vector2(0, height),
+                    Alpha = alpha
                 }
             );
 
@@ -539,7 +556,8 @@ namespace Minecraft.Source
                 {
                     Position = c,
                     AtlasUV = uv,
-                    TileUV = new Vector2(0, 0)
+                    TileUV = new Vector2(0, 0),
+                    Alpha = alpha
                 }
             );
 
@@ -548,7 +566,8 @@ namespace Minecraft.Source
                 {
                     Position = d,
                     AtlasUV = uv,
-                    TileUV = new Vector2(width, 0)
+                    TileUV = new Vector2(width, 0),
+                    Alpha = alpha
                 }
             );
 

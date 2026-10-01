@@ -101,6 +101,15 @@ namespace Minecraft.Source
             chunk.AddBlockOnChunk(blockType, position);
         }
 
+        public Block GetBlock(int x, int y, int z)
+        {
+            Chunk chunk;
+            if ((chunk = GetChunkOnPos(new IntPosition(x, y, z))) == null)
+                return default;
+
+            return chunk.GetBlock(x.Mod(Chunk.WIDTH), y, z.Mod(Chunk.DEPTH));
+        }
+
         public bool IsBlock(int x, int y, int z, bool checkTransparent = false)
         {
             Chunk chunk;

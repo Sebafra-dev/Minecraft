@@ -39,6 +39,8 @@ namespace Minecraft.Source.Objects
                     return new(8, 8);
                 case BlockType.SmallGrass:
                     return new(9, 9);
+                case BlockType.Water:
+                    return new(10, 10);
                 default:
                     break;
             }
@@ -46,7 +48,7 @@ namespace Minecraft.Source.Objects
             return new(0, 0);
         }
 
-        public readonly BlockProperties GetProperties() => BlockProperties.Blocks[GetBlockType()];
+        public readonly BlockProperties GetProperties() => Blocks[GetBlockType()];
 
     }
 }

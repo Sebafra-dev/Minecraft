@@ -54,7 +54,7 @@ namespace Minecraft.Source
 
                     int baseHeight = 70;
                     int maxVariancy = 40;
-                    int terrainHeight = baseHeight + (int)(noiseValue * maxVariancy);
+                    int terrainHeight = baseHeight + (int)((noiseValue + 0.2f) * maxVariancy);
                     terrainHeight = Math.Clamp(terrainHeight, 0, HEIGHT - 1);
 
                     for (int y = 0; y <= terrainHeight; y++)
@@ -64,25 +64,33 @@ namespace Minecraft.Source
                         AddBlockOnChunk(blockType, new IntPosition(globalX, y, globalZ));
                     }
 
-                    //TREE
-                    if (Utils.GetHashOnPosition(globalX, globalZ) < 0.004)
+                    for (int y = terrainHeight + 1; y < baseHeight; y++)
                     {
-                        SpawnTree(new(globalX, terrainHeight, globalZ));
+                        AddBlockOnChunk(BlockType.Water, new(globalX, y, globalZ));
                     }
-                    //RED FLOWER
-                    else if (Utils.GetHashOnPosition(globalX, globalZ) < 0.007)
+
+                    if (GetBlock(x, terrainHeight + 1, z).GetBlockType() != BlockType.Water)
                     {
-                        AddBlockOnChunk(BlockType.RedFlower, new(globalX, terrainHeight + 1, globalZ));
-                    }
-                    //YELLOW FLOWER
-                    else if (Utils.GetHashOnPosition(globalX, globalZ) < 0.010)
-                    {
-                        AddBlockOnChunk(BlockType.YellowFlower, new(globalX, terrainHeight + 1, globalZ));
-                    }
-                    //SMALL GRASS
-                    else if (Utils.GetHashOnPosition(globalX, globalZ) < 0.024)
-                    {
-                        AddBlockOnChunk(BlockType.SmallGrass, new(globalX, terrainHeight + 1, globalZ));
+                        //TREE
+                        if (Utils.GetHashOnPosition(globalX, globalZ) < 0.004)
+                        {
+                            SpawnTree(new(globalX, terrainHeight, globalZ));
+                        }
+                        //RED FLOWER
+                        else if (Utils.GetHashOnPosition(globalX, globalZ) < 0.007)
+                        {
+                            AddBlockOnChunk(BlockType.RedFlower, new(globalX, terrainHeight + 1, globalZ));
+                        }
+                        //YELLOW FLOWER
+                        else if (Utils.GetHashOnPosition(globalX, globalZ) < 0.010)
+                        {
+                            AddBlockOnChunk(BlockType.YellowFlower, new(globalX, terrainHeight + 1, globalZ));
+                        }
+                        //SMALL GRASS
+                        else if (Utils.GetHashOnPosition(globalX, globalZ) < 0.024)
+                        {
+                            AddBlockOnChunk(BlockType.SmallGrass, new(globalX, terrainHeight + 1, globalZ));
+                        }
                     }
                 }
             }
