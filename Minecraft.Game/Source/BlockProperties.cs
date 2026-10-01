@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using static Minecraft.Source.Objects.Block;
 
 namespace Minecraft.Source
 {
@@ -8,6 +7,19 @@ namespace Minecraft.Source
         public bool Visible { get; private set; }
         public bool Transparent { get; private set; }
         public bool Object { get; private set; }
+
+        public enum BlockType : byte
+        {
+            Air,
+            Grass,
+            Dirt,
+            Stone,
+            Wood,
+            Leaf,
+            RedFlower,
+            YellowFlower,
+            SmallGrass
+        }
 
         public readonly static Dictionary<BlockType, BlockProperties> Blocks = new() {
             [BlockType.Air] = new BlockProperties(visible: false), 

@@ -66,6 +66,9 @@ float4 MainPS(VertexShaderOutput input) : SV_TARGET
     );
 
     float2 uv = input.AtlasUV + tileUV * tileSize;
+    
+    float4 color = Texture.Sample(TextureSampler, uv);
+    clip(color.a - 0.5);
 
     return Texture.Sample(TextureSampler, uv);
 }

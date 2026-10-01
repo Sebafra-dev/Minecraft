@@ -1,23 +1,10 @@
-﻿using Minecraft.Source.Structures;
-using System;
+﻿using System;
+using static Minecraft.Source.BlockProperties;
 
 namespace Minecraft.Source.Objects
 {
     public struct Block
     {
-        public enum BlockType : byte
-        {
-            Air,
-            Grass,
-            Dirt,
-            Stone,
-            Wood,
-            Leaf,
-            RedFlower,
-            YellowFlower,
-            SmallGrass
-        }
-
         private BlockType _id;
 
         public Block(BlockType id)

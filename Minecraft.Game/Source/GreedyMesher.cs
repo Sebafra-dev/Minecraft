@@ -4,6 +4,7 @@ using Minecraft.Source.Structures;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using static Minecraft.Source.BlockProperties;
 
 namespace Minecraft.Source
 {
@@ -28,7 +29,7 @@ namespace Minecraft.Source
         private struct MaskCell
         {
             public bool Active;
-            public Block.BlockType Type;
+            public BlockType Type;
             public Block Block;
         }
 

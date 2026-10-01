@@ -21,9 +21,9 @@ namespace Minecraft.Source
             return (a % b + b) % b;
         }
 
-        public static float GetHashOnPosition(int x, int z, int seed)
+        public static float GetHashOnPosition(int x, int z)
         {
-            int hash = HashCode.Combine(x, z, seed);
+            int hash = HashCode.Combine(x, z, Globals.SEED);
 
             uint uHash = (uint)hash;
             return (float)uHash / uint.MaxValue;

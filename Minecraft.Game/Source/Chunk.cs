@@ -2,6 +2,7 @@
 using Minecraft.Source.Objects;
 using Minecraft.Source.Structures;
 using System;
+using static Minecraft.Source.BlockProperties;
 using static Minecraft.Source.GreedyMesher;
 using static Minecraft.Source.Objects.Block;
 
@@ -64,22 +65,22 @@ namespace Minecraft.Source
                     }
 
                     //TREE
-                    if (Utils.GetHashOnPosition(globalX, globalZ, Globals.SEED) < 0.004)
+                    if (Utils.GetHashOnPosition(globalX, globalZ) < 0.004)
                     {
                         SpawnTree(new(globalX, terrainHeight, globalZ));
                     }
                     //RED FLOWER
-                    else if (Utils.GetHashOnPosition(globalX, globalZ, Globals.SEED) < 0.008)
+                    else if (Utils.GetHashOnPosition(globalX, globalZ) < 0.007)
                     {
                         AddBlockOnChunk(BlockType.RedFlower, new(globalX, terrainHeight + 1, globalZ));
                     }
                     //YELLOW FLOWER
-                    else if (Utils.GetHashOnPosition(globalX, globalZ, Globals.SEED) < 0.012)
+                    else if (Utils.GetHashOnPosition(globalX, globalZ) < 0.010)
                     {
                         AddBlockOnChunk(BlockType.YellowFlower, new(globalX, terrainHeight + 1, globalZ));
                     }
                     //SMALL GRASS
-                    else if (Utils.GetHashOnPosition(globalX, globalZ, Globals.SEED) < 0.024)
+                    else if (Utils.GetHashOnPosition(globalX, globalZ) < 0.024)
                     {
                         AddBlockOnChunk(BlockType.SmallGrass, new(globalX, terrainHeight + 1, globalZ));
                     }
@@ -118,13 +119,13 @@ namespace Minecraft.Source
                 for (int dx = -2; dx <= 2; dx++)
                     for (int dz = -2; dz <= 2; dz++)
                     {
-                        AddBlockOnChunk(BlockType.Leaf, startPos + new IntPosition(dx, 5 + dy, dz));
+                        AddBlockOnChunk(BlockType.Leaf, startPos + new IntPosition(dx, 4 + dy, dz));
                     }
 
             for (int dx = -1; dx <= 1; dx++)
                 for (int dz = -1; dz <= 1; dz++)
                 {
-                    AddBlockOnChunk(BlockType.Leaf, startPos + new IntPosition(dx, 5 + 3, dz));
+                    AddBlockOnChunk(BlockType.Leaf, startPos + new IntPosition(dx, 4 + 3, dz));
                 }
         }
 

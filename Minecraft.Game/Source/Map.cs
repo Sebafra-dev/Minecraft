@@ -9,7 +9,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using static Minecraft.Source.Objects.Block;
+using static Minecraft.Source.BlockProperties;
 
 namespace Minecraft.Source
 {
