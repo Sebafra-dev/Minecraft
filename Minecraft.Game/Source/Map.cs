@@ -103,6 +103,9 @@ namespace Minecraft.Source
 
         public Block GetBlock(int x, int y, int z)
         {
+            if (y < 0 || y >= Chunk.HEIGHT)
+                return default;
+
             Chunk chunk;
             if ((chunk = GetChunkOnPos(new IntPosition(x, y, z))) == null)
                 return default;

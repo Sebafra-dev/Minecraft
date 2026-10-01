@@ -61,7 +61,7 @@ namespace Minecraft.Source
                     {
                         BlockType blockType = (y == terrainHeight) ? BlockType.Grass : BlockType.Stone;
 
-                        AddBlockOnChunk(blockType, new IntPosition(globalX, y, globalZ));
+                        AddBlockOnChunk(blockType, new(globalX, y, globalZ));
                     }
 
                     for (int y = terrainHeight + 1; y < baseHeight; y++)
