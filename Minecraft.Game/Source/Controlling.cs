@@ -11,7 +11,7 @@ namespace Minecraft.Source
 
         private float _yaw = 0f;
         private float _pitch = 0f;
-        private readonly float _moveSpeed = 10f;
+        private readonly float _moveSpeed = 8f;
         private readonly float _moveSpeedNoClip = 30f;
         private readonly float _mouseSensitivity = 0.004f;
         public static bool NoClip = false;
@@ -94,9 +94,6 @@ namespace Minecraft.Source
 
                 if (_keyboardState.IsKeyDown(Keys.D))
                     player.Move(r);
-
-                if (_keyboardState.IsKeyDown(Keys.Space))
-                    player.Move(new(0, 30f * deltaTime, 0));
             }
 
             if (_keyboardState.IsKeyDown(Keys.Escape))

@@ -38,7 +38,7 @@ namespace Minecraft.Source
 
             GenerateChunkOrder();
 
-            var player = new Player();
+            var player = new Player(new(1f, 2f, 1f));
             player.SetPosition(0, 75, 0);
             Globals.SetPlayer(player);
             _entities.Add(player);

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
-using Windows.Media.Devices.Core;
+using Microsoft.Xna.Framework.Input;
+using System;
 
 namespace Minecraft.Source.Objects
 {
@@ -7,9 +8,13 @@ namespace Minecraft.Source.Objects
     {
         protected Vector3 _pos;
 
-        public Entity()
-        {
+        private float _velocityY = 0f;
 
+        private Vector3 _sizes;
+
+        public Entity(Vector3 sizes)
+        {
+            _sizes = sizes;
         }
 
         public Vector3 GetPosition() => _pos;
@@ -41,12 +46,37 @@ namespace Minecraft.Source.Objects
             var map = Globals.GetMap();
             float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-            var block = map.GetBlock((int)_pos.X, (int)_pos.Y - 2, (int)_pos.Z);
+            var block = map.GetBlock((int)_pos.X, (int)(_pos.Y - _sizes.Y), (int)_pos.Z);
+            var cameraBlock = map.GetBlock((int)_pos.X, (int)_pos.Y, (int)_pos.Z);
 
-            if (block.GetProperties().NoCollision)
+            bool grounded = !block.GetProperties().NoCollision;
+            bool inLiquid = cameraBlock.GetProperties().Liquid;
+
+            //jump
+            if ((grounded || inLiquid) && Globals.GetControlling().GetKeyboardState().IsKeyDown(Keys.Space))
             {
-                Move(0, -10f * deltaTime, 0);
+                const float jumpVelocity = 8f;
+                const float liquidJumpVelocity = 5f;
+                _velocityY = inLiquid ? liquidJumpVelocity : jumpVelocity;
             }
+
+            //gravity
+            if (!grounded)
+            {
+                const float gravity = 20f;
+                const float liquidGravity = 1f;
+                const float maxVelocity = 50f;
+                const float maxLiquidVelocity = 3f;
+
+                _velocityY -= (inLiquid ? liquidGravity : gravity) * deltaTime;
+                _velocityY = MathF.Max(_velocityY, -(inLiquid ? maxLiquidVelocity : maxVelocity));
+            }
+            else if (_velocityY < 0)
+            {
+                _velocityY = 0f;
+            }
+
+            Move(0, _velocityY * deltaTime, 0);
         }
     }
 }
