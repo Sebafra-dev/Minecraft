@@ -2,6 +2,7 @@
 using Minecraft.Source.Objects;
 using Minecraft.Source.Structures;
 using System.Diagnostics;
+using Windows.Media.Capture.Frames;
 using static Minecraft.Source.GreedyMesher;
 
 namespace Minecraft.Source
@@ -35,34 +36,20 @@ namespace Minecraft.Source
             _blocks = new Block[WIDTH * HEIGHT * DEPTH];
         }
 
-        private int vertexCount;
-        private int indexCount;
-
-        public void UpdateMeshData(MeshData mesh)
+        public void UpdateMeshData(MeshData mesh) 
         {
             var graphicsDevice = Globals.GetGraphics().GraphicsDevice;
 
             IndexCount = mesh.Indices.Count;
 
+            VertexBuffer?.Dispose();
+            IndexBuffer?.Dispose();
+
             if (IndexCount == 0)
                 return;
 
-            if (VertexBuffer == null || vertexCount < mesh.Vertices.Count)
-            {
-                vertexCount = mesh.Vertices.Count;
-
-                VertexBuffer?.Dispose();
-
-                VertexBuffer = new VertexBuffer(graphicsDevice, VoxelVertex.VertexDeclaration, vertexCount, BufferUsage.WriteOnly);
-            }
-
-            if (IndexBuffer == null || indexCount < mesh.Indices.Count)
-            {
-                indexCount = mesh.Indices.Count;
-                IndexBuffer?.Dispose();
-
-                IndexBuffer = new IndexBuffer(graphicsDevice, IndexElementSize.ThirtyTwoBits, indexCount, BufferUsage.WriteOnly);
-            }
+            VertexBuffer = new VertexBuffer(graphicsDevice, VoxelVertex.VertexDeclaration, mesh.Vertices.Count, BufferUsage.WriteOnly);
+            IndexBuffer = new IndexBuffer(graphicsDevice, IndexElementSize.ThirtyTwoBits, mesh.Indices.Count, BufferUsage.WriteOnly);
 
             VertexBuffer.SetData(mesh.Vertices.ToArray());
             IndexBuffer.SetData(mesh.Indices.ToArray());
