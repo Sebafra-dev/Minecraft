@@ -31,71 +31,75 @@ namespace Minecraft.Source
             public Block Block;
         }
 
-        public static MeshData Build(Chunk chunk)
+        public static MeshData Build(Chunk chunk, int chunkSectionIndex)
         {
             var mesh = new MeshData();
 
-            BuildFace(chunk, mesh, Face.PlusX);
-            BuildFace(chunk, mesh, Face.MinusX);
+            BuildFace(chunk, chunkSectionIndex, mesh, Face.PlusX);
+            BuildFace(chunk, chunkSectionIndex, mesh, Face.MinusX);
 
-            BuildFace(chunk, mesh, Face.PlusY);
-            BuildFace(chunk, mesh, Face.MinusY);
+            BuildFace(chunk, chunkSectionIndex, mesh, Face.PlusY);
+            BuildFace(chunk, chunkSectionIndex, mesh, Face.MinusY);
 
-            BuildFace(chunk, mesh, Face.PlusZ);
-            BuildFace(chunk, mesh, Face.MinusZ);
+            BuildFace(chunk, chunkSectionIndex, mesh, Face.PlusZ);
+            BuildFace(chunk, chunkSectionIndex, mesh, Face.MinusZ);
 
-            BuildObjects(chunk, mesh);
+            BuildObjects(chunk, chunkSectionIndex, mesh);
 
             return mesh;
         }
 
-        private static void BuildObjects(Chunk chunk, MeshData mesh)
+        private static void BuildObjects(Chunk chunk, int chunkSectionIndex, MeshData mesh)
         {
-            for (int x = 0; x < Chunk.WIDTH; x++)
+            var chunkSection = chunk.ChunkSections[chunkSectionIndex];
+
+            for (int x = 0; x < ChunkSection.WIDTH; x++)
             {
-                for (int y = 0; y < Chunk.HEIGHT; y++)
+                for (int y = 0; y < ChunkSection.HEIGHT; y++)
                 {
-                    for (int z = 0; z < Chunk.DEPTH; z++)
+                    for (int z = 0; z < ChunkSection.DEPTH; z++)
                     {
-                        Block block = chunk.GetBlock(x, y, z);
+                        Block block = chunkSection.GetBlock(x, y, z);
                         if (!block.GetProperties().Object)
                             continue;
 
-                        AddObject(chunk, mesh, block, x, y, z);
+                        AddObject(chunk, chunkSectionIndex, mesh, block, x, y, z);
                     }
                 }
             }
         }
 
-        private static void BuildFace(Chunk chunk, MeshData mesh, Face face)
+        private static void BuildFace(Chunk chunk, int chunkSectionIndex, MeshData mesh, Face face)
         {
             int slices;
             int width;
             int height;
 
+            var chunkSection = chunk.ChunkSections[chunkSectionIndex];
+
             switch (face)
             {
                 case Face.PlusX:
                 case Face.MinusX:
-                    slices = Chunk.WIDTH;
+                    slices = ChunkSection.WIDTH;
 
-                    width = Chunk.DEPTH;
-                    height = Chunk.HEIGHT;
+                    width = ChunkSection.DEPTH;
+                    height = ChunkSection.HEIGHT;
                     break;
 
                 case Face.PlusY:
                 case Face.MinusY:
-                    slices = Chunk.HEIGHT;
+                    slices = ChunkSection.HEIGHT;
 
-                    width = Chunk.WIDTH;
-                    height = Chunk.DEPTH;
+                    width = ChunkSection.WIDTH;
+                    height = ChunkSection.DEPTH;
                     break;
 
                 default:
-                    slices = Chunk.DEPTH;
+                    slices = ChunkSection.DEPTH;
 
-                    width = Chunk.WIDTH;
-                    height = Chunk.HEIGHT;
+                    width = ChunkSection.WIDTH;
+                    height = ChunkSection.HEIGHT;
                     break;
             }
 
@@ -109,12 +113,13 @@ namespace Minecraft.Source
                     {
                         GetCoordinates(face, slice, u, v, out int x, out int y, out int z);
 
-                        Block block = chunk.GetBlock(x, y, z);
+                        Block block = chunkSection.GetBlock(x, y, z);
                         var blockProperties = block.GetProperties();
 
                         int index = v * width + u;
 
-                        if (!blockProperties.Visible || blockProperties.Object || !IsFaceVisible(chunk, face, x, y, z))
+                        if (!blockProperties.Visible || blockProperties.Object || 
+                            !IsFaceVisible(chunk, chunkSectionIndex, face, x, y, z))
                         {
                             mask[index] = default;
                             continue;
@@ -174,6 +179,7 @@ namespace Minecraft.Source
 
                         AddQuad(
                             chunk,
+                            chunkSectionIndex,
                             mesh,
                             face,
                             slice,
@@ -241,12 +247,12 @@ namespace Minecraft.Source
             }
         }
 
-        private static bool IsFaceVisible(Chunk chunk, Face face, int x, int y, int z)
+        private static bool IsFaceVisible(Chunk chunk, int chunkSectionIndex, Face face, int x, int y, int z)
         {
             ChunkPosition chunkPos = chunk.GetPosition();
 
             int globalX = chunkPos.X * Chunk.WIDTH + x;
-            int globalY = y;
+            int globalY = chunkSectionIndex * ChunkSection.HEIGHT + y;
             int globalZ = chunkPos.Z * Chunk.DEPTH + z;
 
             var map = Globals.GetMap();
@@ -275,7 +281,7 @@ namespace Minecraft.Source
             };
         }
 
-        private static void AddObject(Chunk chunk, MeshData mesh, Block block,  int x, int y, int z)
+        private static void AddObject(Chunk chunk, int chunkSectionIndex, MeshData mesh, Block block,  int x, int y, int z)
         {
             var ids = block.GetAtlasIds();
 
@@ -285,7 +291,7 @@ namespace Minecraft.Source
             ChunkPosition chunkPos = chunk.GetPosition();
 
             int globalX = chunkPos.X * Chunk.WIDTH + x;
-            int globalY = y;
+            int globalY = chunkSectionIndex * ChunkSection.HEIGHT + y;
             int globalZ = chunkPos.Z * Chunk.DEPTH + z;
 
             int vertexOffset = mesh.Vertices.Count; // 1
@@ -413,8 +419,8 @@ namespace Minecraft.Source
             mesh.Indices.Add(vertexOffset + 1);
         }
 
-        private static void AddQuad(
-            Chunk chunk,
+        private static void AddQuad(Chunk chunk,
+            int chunkSectionIndex,
             MeshData mesh,
             Face face,
             int slice,
@@ -427,6 +433,7 @@ namespace Minecraft.Source
             var chunkPos = chunk.GetPosition();
 
             float chunkX = chunkPos.X * Chunk.WIDTH;
+            float chunkY = chunkSectionIndex * ChunkSection.HEIGHT;
             float chunkZ = chunkPos.Z * Chunk.DEPTH;
 
             Vector3 a;
@@ -439,7 +446,7 @@ namespace Minecraft.Source
                 case Face.PlusX:
                     {
                         float x = chunkX + slice + 1;
-                        float y = v;
+                        float y = chunkY + v;
                         float z = chunkZ + u;
 
                         a = new Vector3(x, y, z + width);
@@ -452,7 +459,7 @@ namespace Minecraft.Source
                 case Face.MinusX:
                     {
                         float x = chunkX + slice;
-                        float y = v;
+                        float y = chunkY + v;
                         float z = chunkZ + u;
 
                         a = new Vector3(x, y, z);
@@ -465,7 +472,7 @@ namespace Minecraft.Source
                 case Face.PlusY:
                     {
                         float x = chunkX + u;
-                        float y = slice + 1;
+                        float y = chunkY + slice + 1;
                         float z = chunkZ + v;
 
                         a = new Vector3(x, y, z + height);
@@ -478,7 +485,7 @@ namespace Minecraft.Source
                 case Face.MinusY:
                     {
                         float x = chunkX + u;
-                        float y = slice;
+                        float y = chunkY + slice;
                         float z = chunkZ + v;
 
                         a = new Vector3(x, y, z);
@@ -491,7 +498,7 @@ namespace Minecraft.Source
                 case Face.PlusZ:
                     {
                         float x = chunkX + u;
-                        float y = v;
+                        float y = chunkY + v;
                         float z = chunkZ + slice + 1;
 
                         a = new Vector3(x, y, z);
@@ -504,7 +511,7 @@ namespace Minecraft.Source
                 case Face.MinusZ:
                     {
                         float x = chunkX + u;
-                        float y = v;
+                        float y = chunkY + v;
                         float z = chunkZ + slice;
 
                         a = new Vector3(x + width, y, z);

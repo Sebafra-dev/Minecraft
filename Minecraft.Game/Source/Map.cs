@@ -15,8 +15,7 @@ namespace Minecraft.Source
 {
     public sealed class Map
     {
-        private readonly Dictionary<ChunkPosition, Chunk> _chunks;
-        private readonly ConcurrentBag<ChunkPosition> _visibleChunks;
+        private readonly ConcurrentDictionary<ChunkPosition, Chunk> _chunks;
         private readonly List<Entity> _entities;
 
         public ChunkPosition? PreviousPlayerChunk;
@@ -27,12 +26,11 @@ namespace Minecraft.Source
         private readonly SemaphoreSlim _chunkCreationLock = new(1, 1);
         private bool _firstChunkCreation = true;
 
-        public ConcurrentQueue<(Chunk, GreedyMesher.MeshData)> AwaitingMeshData = [];
+        public ConcurrentQueue<(ChunkSection, GreedyMesher.MeshData)> AwaitingMeshData = [];
 
         public Map()
         {
             _chunks = [];
-            _visibleChunks = [];
 
             _entities = [];
 
@@ -53,7 +51,6 @@ namespace Minecraft.Source
         ~Map()
         {
             _chunks.Clear();
-            _visibleChunks.Clear();
             _entities.Clear();
         }
 
@@ -64,9 +61,8 @@ namespace Minecraft.Source
             BoundingFrustum frustum = new(view * Globals.GetProjection());
             var chunks = new List<Chunk>();
 
-            foreach (var chunkId in _visibleChunks)
+            foreach (var chunk in _chunks.Values)
             {
-                var chunk = _chunks[chunkId];
                 if (!chunk.IsActive())
                     continue;
 
@@ -165,7 +161,7 @@ namespace Minecraft.Source
 
             try
             {
-                var chunkIds = new List<ChunkPosition>();
+                var chunkIds = new HashSet<ChunkPosition>();
                 var missingIds = new List<ChunkPosition>();
 
                 foreach (var chunkOrder in _chunkOrder)
@@ -181,20 +177,33 @@ namespace Minecraft.Source
                         missingIds.Add(id);
                 }
 
-                var generated = await Task.WhenAll(missingIds.Select(id =>
+                var generatedChunks = new HashSet<(ChunkPosition, Chunk)>();
+
+                foreach(var missingId in missingIds)
+                {
+                    Chunk chunk = null;
+                    foreach(var chunkId in _chunks.Keys)
+                    {
+                        if (chunkIds.Contains(chunkId))
+                            continue;
+
+                        _chunks.TryRemove(chunkId, out chunk);
+                        break;
+                    }
+
+                    chunk ??= new Chunk();
+
+                    _chunks.TryAdd(missingId, chunk);
+
+                    generatedChunks.Add((missingId, chunk));
+                }
+
+                var generated = await Task.WhenAll(generatedChunks.Select(chunkData =>
                     Task.Run(() => {
-                        var chunk = new Chunk(id);
-                        return (Id: id, Chunk: chunk);
+                        chunkData.Item2.ResetChunk(chunkData.Item1);
+                        return (Id: chunkData.Item1, Chunk: chunkData.Item2);
                     })
                 ));
-
-                foreach (var item in generated)
-                    _chunks.Add(item.Id, item.Chunk);
-
-                _visibleChunks.Clear();
-
-                foreach (var id in chunkIds)
-                    _visibleChunks.Add(id);
 
                 var chunksMesh = new HashSet<Chunk>();
 
@@ -214,12 +223,22 @@ namespace Minecraft.Source
                     }
                 }
 
-                await Task.WhenAll(chunksMesh.Select(chunk =>
-                    Task.Run(() => {
+                List<Task> tasks = [];
+
+                foreach (var chunk in chunksMesh)
+                {
+                    tasks.Add(Task.Run(() =>
+                    {
                         chunk.RefreshMesh();
                         chunk.SetActive();
-                    })
-                ));
+                    }));
+
+                    if (tasks.Count >= 16) 
+                    {
+                        await Task.WhenAll(tasks);
+                        tasks.Clear();
+                    }
+                }
 
                 _firstChunkCreation = false;
             }
@@ -233,7 +252,6 @@ namespace Minecraft.Source
         {
             var pos = Globals.GetPlayer().GetPosition();
             var chunkPos = GetChunkIdFromPos(pos);
-            var graphicsDevice = Globals.GetGraphics().GraphicsDevice;
 
             while (AwaitingMeshData.TryDequeue(out var meshData))
             {
@@ -270,20 +288,29 @@ namespace Minecraft.Source
 
                 foreach (var chunk in visibleChunks)
                 {
-                    if (chunk.IndexCount == 0 || chunk.VertexBuffer == null)
-                        continue;
+                    foreach(var chunkSection in chunk.ChunkSections)
+                    {
+                        if (chunkSection == null)
+                            continue;
 
-                    graphicsDevice.SetVertexBuffer(chunk.VertexBuffer);
-                    graphicsDevice.Indices = chunk.IndexBuffer;
+                        var vertexBuffer = chunkSection.VertexBuffer;
+                        var indexBuffer = chunkSection.IndexBuffer;
 
-                    vertices += chunk.VertexBuffer.VertexCount;
+                        if (chunkSection.IndexCount == 0 || vertexBuffer == null)
+                            continue;
 
-                    graphicsDevice.DrawIndexedPrimitives(
-                        PrimitiveType.TriangleList,
-                        0,
-                        0,
-                        chunk.IndexCount / 3
-                    );
+                        graphicsDevice.SetVertexBuffer(vertexBuffer);
+                        graphicsDevice.Indices = indexBuffer;
+
+                        vertices += vertexBuffer.VertexCount;
+
+                        graphicsDevice.DrawIndexedPrimitives(
+                            PrimitiveType.TriangleList,
+                            0,
+                            0,
+                            indexBuffer.IndexCount / 3
+                        );
+                    }
                 }
             }
 

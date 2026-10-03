@@ -1,10 +1,8 @@
-﻿using Microsoft.Xna.Framework.Graphics;
-using Minecraft.Source.Objects;
+﻿using Minecraft.Source.Objects;
 using Minecraft.Source.Structures;
 using System;
 using static Minecraft.Source.BlockProperties;
 using static Minecraft.Source.GreedyMesher;
-using static Minecraft.Source.Objects.Block;
 
 namespace Minecraft.Source
 {
@@ -14,27 +12,31 @@ namespace Minecraft.Source
         public const int HEIGHT = 256;
         public const int DEPTH = 16;
 
-        private Block[] _blocks;
-        private readonly ChunkPosition _position;
+        private ChunkPosition _position;
 
         private bool _generated = false;
 
-        public VertexBuffer VertexBuffer { get; private set; }
-        public IndexBuffer IndexBuffer { get; private set; }
-        public int IndexCount { get; private set; }
+        public ChunkSection[] ChunkSections { get; private set; }
 
-        public Chunk(ChunkPosition position)
+        public Chunk()
         {
-            _position = position;
-
-            _blocks = new Block[WIDTH * HEIGHT * DEPTH];
-
-            GenerateChunk();
+            ChunkSections = new ChunkSection[HEIGHT / ChunkSection.HEIGHT];
         }
 
         ~Chunk()
         {
-            _blocks = null;
+            ChunkSections = null;
+        }
+
+        public void ResetChunk(ChunkPosition position)
+        {
+            SetInactive();
+            _position = position;
+
+            foreach (var chunkSection in ChunkSections)
+                chunkSection?.ResetBlocks();
+
+            GenerateChunk();
         }
 
         public ChunkPosition GetPosition() => _position;
@@ -100,7 +102,7 @@ namespace Minecraft.Source
         {
             var (chunkX, chunkY, chunkZ) = (position.X.Mod(WIDTH), position.Y, position.Z.Mod(DEPTH));
 
-            _blocks[GetBlockIndex(chunkX, chunkY, chunkZ)].SetBlockType(blockType);
+            GetBlock(chunkX, chunkY, chunkZ).SetBlockType(blockType);
         }
 
         public void AddBlockOnChunk(BlockType blockType, IntPosition position)
@@ -113,7 +115,7 @@ namespace Minecraft.Source
             if (IsBlock(chunkX, chunkY, chunkZ))
                 return;
 
-            _blocks[GetBlockIndex(chunkX, chunkY, chunkZ)] = new Block(blockType);
+            SetBlock(chunkX, chunkY, chunkZ, new Block(blockType));
         }
 
         private void SpawnTree(IntPosition startPos)
@@ -139,29 +141,17 @@ namespace Minecraft.Source
 
         public void RefreshMesh()
         {
-            Globals.GetMap().AwaitingMeshData.Enqueue((this, Build(this)));
+            for (int y = 0; y < ChunkSections.Length; y++)
+            {
+                var chunkSection = ChunkSections[y];
+                if (chunkSection == null)
+                    continue;
+
+                var mesh = Build(this, y);
+
+                Globals.GetMap().AwaitingMeshData.Enqueue((chunkSection, mesh));
+            }
         }
-
-        public void UpdateMeshData(MeshData mesh)
-        {
-            var graphicsDevice = Globals.GetGraphics().GraphicsDevice;
-
-            VertexBuffer?.Dispose();
-            IndexBuffer?.Dispose();
-
-            IndexCount = mesh.Indices.Count;
-
-            if (IndexCount == 0)
-                return;
-
-            VertexBuffer = new VertexBuffer(graphicsDevice, VoxelVertex.VertexDeclaration, mesh.Vertices.Count, BufferUsage.WriteOnly);
-            VertexBuffer.SetData(mesh.Vertices.ToArray());
-
-            IndexBuffer = new IndexBuffer(graphicsDevice, IndexElementSize.ThirtyTwoBits, mesh.Indices.Count, BufferUsage.WriteOnly);
-            IndexBuffer.SetData(mesh.Indices.ToArray());
-        }
-
-        private static int GetBlockIndex(int x, int y, int z) => x + (z << 4) + (y << 8);
 
         public bool IsBlock(int x, int y, int z, bool checkTransparent = false)
         {
@@ -195,6 +185,36 @@ namespace Minecraft.Source
             _generated = true;
         }
 
-        public Block GetBlock(int x, int y, int z) => _blocks[GetBlockIndex(x, y, z)];
+        public Block GetBlock(int x, int y, int z) 
+        {
+            int sectionIndex = y / ChunkSection.HEIGHT;
+            int localY = y % ChunkSection.HEIGHT;
+
+            var section = ChunkSections[sectionIndex];
+
+            if (section == null)
+            {
+                section = new ChunkSection();
+                ChunkSections[sectionIndex] = section;
+            }
+
+            return section.GetBlock(x, localY, z);
+        }
+
+        private void SetBlock(int x, int y, int z, Block block)
+        {
+            int sectionIndex = y / ChunkSection.HEIGHT;
+            int localY = y % ChunkSection.HEIGHT;
+
+            var section = ChunkSections[sectionIndex];
+
+            if (section == null)
+            {
+                section = new ChunkSection();
+                ChunkSections[sectionIndex] = section;
+            }
+
+            section.SetBlock(x, localY, z, block);
+        }
     }
 }

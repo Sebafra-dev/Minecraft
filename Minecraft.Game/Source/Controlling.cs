@@ -77,11 +77,21 @@ namespace Minecraft.Source
             }
             else
             {
-                var f = forward * _moveSpeed * deltaTime * speedPerc;
-                f.Y = 0;
+                Vector3 f = Vector3.Transform(
+                    Vector3.Forward,
+                    Matrix.CreateRotationY(_yaw)
+                );
 
-                var r = right * _moveSpeed * deltaTime * speedPerc;
-                r.Y = 0;
+                Vector3 r = Vector3.Transform(
+                    Vector3.Right,
+                    Matrix.CreateRotationY(_yaw)
+                );
+
+                f.Normalize();
+                r.Normalize();
+
+                f *= _moveSpeed * deltaTime * speedPerc;
+                r *= _moveSpeed * deltaTime * speedPerc;
 
                 if (_keyboardState.IsKeyDown(Keys.W))
                     player.Move(f);
