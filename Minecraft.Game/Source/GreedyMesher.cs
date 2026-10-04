@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics.PackedVector;
 using Minecraft.Source.Objects;
 using Minecraft.Source.Structures;
 using System.Collections.Generic;
@@ -259,10 +260,17 @@ namespace Minecraft.Source
 
             Block block = map.GetBlock(globalX, globalY, globalZ);
 
-            var checkTransparent = true;
             if (block.GetProperties().Liquid)
-                checkTransparent = false;
-          
+            {
+                return face switch
+                {
+                    Face.PlusY => !map.IsBlock(globalX, globalY + 1, globalZ, false),
+                    _ => false
+                };
+            }
+
+            var checkTransparent = true;
+
             return face switch
             {
                 Face.PlusX => !map.IsBlock(globalX + 1, globalY, globalZ, checkTransparent),
@@ -284,8 +292,7 @@ namespace Minecraft.Source
         private static void AddObject(Chunk chunk, int chunkSectionIndex, MeshData mesh, Block block,  int x, int y, int z)
         {
             var ids = block.GetAtlasIds();
-
-            Vector2 uv = Utils.GetUV(ids.Item2);
+            var atlasId = ids.Item2;
             var alpha = block.GetProperties().Alpha;
 
             ChunkPosition chunkPos = chunk.GetPosition();
@@ -302,9 +309,8 @@ namespace Minecraft.Source
                     globalX,
                     globalY,
                     globalZ + 1),
-                AtlasUV = uv,
-                TileUV = new Vector2(1, 1),
-                Alpha = alpha
+                TileUV = new HalfVector2(1, 1),
+                Data = new((byte)atlasId, (byte)0, (byte)0, alpha)
             });
 
             mesh.Vertices.Add(new VoxelVertex
@@ -313,9 +319,8 @@ namespace Minecraft.Source
                     globalX + 1,
                     globalY,
                     globalZ),
-                AtlasUV = uv,
-                TileUV = new Vector2(0, 1),
-                Alpha = alpha
+                TileUV = new HalfVector2(0, 1),
+                Data = new((byte)atlasId, (byte)0, (byte)0, alpha)
             });
 
             mesh.Vertices.Add(new VoxelVertex
@@ -324,9 +329,8 @@ namespace Minecraft.Source
                     globalX,
                     globalY + 1,
                     globalZ + 1),
-                AtlasUV = uv,
-                TileUV = new Vector2(1, 0),
-                Alpha = alpha
+                TileUV = new HalfVector2(1, 0),
+                Data = new((byte)atlasId, (byte)0, (byte)0, alpha)
             });
 
             mesh.Vertices.Add(new VoxelVertex
@@ -335,9 +339,8 @@ namespace Minecraft.Source
                     globalX + 1,
                     globalY + 1,
                     globalZ),
-                AtlasUV = uv,
-                TileUV = new Vector2(0, 0),
-                Alpha = alpha
+                TileUV = new HalfVector2(0, 0),
+                Data = new((byte)atlasId, (byte)0, (byte)0, alpha)
             });
 
             mesh.Indices.Add(vertexOffset);
@@ -364,9 +367,8 @@ namespace Minecraft.Source
                     globalX,
                     globalY,
                     globalZ),
-                AtlasUV = uv,
-                TileUV = new Vector2(1, 1),
-                Alpha = alpha
+                TileUV = new HalfVector2(1, 1),
+                Data = new((byte)atlasId, (byte)0, (byte)0, alpha)
             });
 
             mesh.Vertices.Add(new VoxelVertex
@@ -375,9 +377,8 @@ namespace Minecraft.Source
                     globalX + 1,
                     globalY,
                     globalZ + 1),
-                AtlasUV = uv,
-                TileUV = new Vector2(0, 1),
-                Alpha = alpha
+                TileUV = new HalfVector2(0, 1),
+                Data = new((byte)atlasId, (byte)0, (byte)0, alpha)
             });
 
             mesh.Vertices.Add(new VoxelVertex
@@ -386,9 +387,8 @@ namespace Minecraft.Source
                     globalX,
                     globalY + 1,
                     globalZ),
-                AtlasUV = uv,
-                TileUV = new Vector2(1, 0),
-                Alpha = alpha
+                TileUV = new HalfVector2(1, 0),
+                Data = new((byte)atlasId, (byte)0, (byte)0, alpha)
             });
 
             mesh.Vertices.Add(new VoxelVertex
@@ -397,9 +397,8 @@ namespace Minecraft.Source
                     globalX + 1,
                     globalY + 1,
                     globalZ + 1),
-                AtlasUV = uv,
-                TileUV = new Vector2(0, 0),
-                Alpha = alpha
+                TileUV = new HalfVector2(0, 0),
+                Data = new((byte)atlasId, (byte)0, (byte)0, alpha)
             });
 
             mesh.Indices.Add(vertexOffset);
@@ -527,13 +526,7 @@ namespace Minecraft.Source
 
             var ids = block.GetAtlasIds();
 
-            Vector2 uv;
-
-            if (face == Face.PlusY)
-                uv = Utils.GetUV(ids.Item1);
-            else
-                uv = Utils.GetUV(ids.Item2);
-
+            var atlasId = face == Face.PlusY ? ids.Item1 : ids.Item2;
             var alpha = block.GetProperties().Alpha;
 
             int vertexOffset = mesh.Vertices.Count;
@@ -542,9 +535,8 @@ namespace Minecraft.Source
                 new VoxelVertex
                 {
                     Position = a,
-                    AtlasUV = uv,
-                    TileUV = new Vector2(width, height),
-                    Alpha = alpha
+                    TileUV = new HalfVector2(width, height),
+                    Data = new((byte)atlasId, (byte)0, (byte)0, alpha)
                 }
             );
 
@@ -552,9 +544,8 @@ namespace Minecraft.Source
                 new VoxelVertex
                 {
                     Position = b,
-                    AtlasUV = uv,
-                    TileUV = new Vector2(0, height),
-                    Alpha = alpha
+                    TileUV = new HalfVector2(0, height),
+                    Data = new((byte)atlasId, (byte)0, (byte)0, alpha)
                 }
             );
 
@@ -562,9 +553,8 @@ namespace Minecraft.Source
                 new VoxelVertex
                 {
                     Position = c,
-                    AtlasUV = uv,
-                    TileUV = new Vector2(0, 0),
-                    Alpha = alpha
+                    TileUV = new HalfVector2(0, 0),
+                    Data = new((byte)atlasId, (byte)0, (byte)0, alpha)
                 }
             );
 
@@ -572,9 +562,8 @@ namespace Minecraft.Source
                 new VoxelVertex
                 {
                     Position = d,
-                    AtlasUV = uv,
-                    TileUV = new Vector2(width, 0),
-                    Alpha = alpha
+                    TileUV = new HalfVector2(width, 0),
+                    Data = new((byte)atlasId, (byte)0, (byte)0, alpha)
                 }
             );
 

@@ -1,8 +1,6 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
 using Minecraft.Source.Objects;
 using Minecraft.Source.Structures;
-using System.Diagnostics;
-using Windows.Media.Capture.Frames;
 using static Minecraft.Source.GreedyMesher;
 
 namespace Minecraft.Source

@@ -8,7 +8,7 @@ namespace Minecraft.Source
         public bool Transparent { get; private set; }
         public bool Object { get; private set; }
         public bool NoCollision { get; private set; }
-        public float Alpha { get; private set; }
+        public byte Alpha { get; private set; }
         public bool Liquid { get; private set; }
 
         public enum BlockType : byte
@@ -35,11 +35,11 @@ namespace Minecraft.Source
             [BlockType.RedFlower] = new BlockProperties(@object: true, noCollision: true),
             [BlockType.YellowFlower] = new BlockProperties(@object: true, noCollision: true),
             [BlockType.SmallGrass] = new BlockProperties(@object: true, noCollision: true),
-            [BlockType.Water] = new BlockProperties(transparent: true, noCollision: true, alpha: 0.7f, liquid: true),
+            [BlockType.Water] = new BlockProperties(transparent: true, noCollision: true, alpha: 200, liquid: true),
         };
 
         public BlockProperties(bool visible = true, bool transparent = false, bool @object = false, bool noCollision = false,
-            float alpha = 1.0f, bool liquid = false)
+            byte alpha = 255, bool liquid = false)
         {
             Visible = visible;
             Transparent = transparent;
