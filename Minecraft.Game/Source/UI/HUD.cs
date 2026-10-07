@@ -5,6 +5,7 @@ namespace Minecraft.Source.UI
     public class HUD : UIElement
     {
         private readonly DebugInfo _debugInfo;
+        
         public HUD(FrameCounter frameCounter) : base(new(0, 0))
         {
             AddChild(_debugInfo = new DebugInfo(frameCounter));

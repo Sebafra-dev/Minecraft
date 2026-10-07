@@ -5,7 +5,6 @@ using Minecraft.Source.Structures;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,7 +17,7 @@ namespace Minecraft.Source
         private readonly ConcurrentDictionary<ChunkPosition, Chunk> _chunks;
         private readonly List<Entity> _entities;
 
-        public ChunkPosition? PreviousPlayerChunk;
+        public ChunkPosition? PreviousPlayerChunk { get; private set; }
 
         private const int RENDER_DISTANCE = 40;
 
@@ -239,6 +238,9 @@ namespace Minecraft.Source
                         tasks.Clear();
                     }
                 }
+
+                await Task.WhenAll(tasks);
+                tasks.Clear();
 
                 _firstChunkCreation = false;
             }

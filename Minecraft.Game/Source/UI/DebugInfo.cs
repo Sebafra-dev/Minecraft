@@ -93,13 +93,13 @@ namespace Minecraft.Source.UI
 
                     string gpuString = _gpuComputer != null
                         ? $"GPU: {gpuUsage:F0}% VRAM: {vramUsed:F0}MB"
-                        : "GPU: brak uprawnień administratora";
+                        : "GPU: no permission";
 
                     _cachedDiagnostics = $"CPU: {cpuUsage:F0}% Used RAM: {totalMemoryMB:F2}MB | {gpuString}";
                 }
                 catch (Exception ex)
                 {
-                    _cachedDiagnostics = $"Błąd diagnostyki: {ex.Message}";
+                    _cachedDiagnostics = $"Diagnostic error: {ex.Message}";
                 }
 
                 await Task.Delay(1000, token);

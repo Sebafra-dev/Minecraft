@@ -29,7 +29,7 @@ namespace Minecraft.Source.Objects
             SetPosition(new Vector3(x, y, z));
         }
 
-        public void Move(Vector3 dPos)
+        public void Move(Vector3 dPos) //TODO collision
         {
             _pos.X += dPos.X;
             _pos.Y += dPos.Y;
@@ -40,6 +40,8 @@ namespace Minecraft.Source.Objects
         {
             Move(new(dx, dy, dz));
         }
+
+        protected bool IsClientPlayer() => this == Globals.GetPlayer();
 
         public virtual void Update(GameTime gameTime)
         {
@@ -53,7 +55,8 @@ namespace Minecraft.Source.Objects
             bool inLiquid = cameraBlock.GetProperties().Liquid;
 
             //jump
-            if ((grounded || inLiquid) && Globals.GetControlling().GetKeyboardState().IsKeyDown(Keys.Space))
+            if (IsClientPlayer() && (grounded || inLiquid) && 
+                Globals.GetControlling().GetKeyboardState().IsKeyDown(Keys.Space))
             {
                 const float jumpVelocity = 8f;
                 const float liquidJumpVelocity = 5f;

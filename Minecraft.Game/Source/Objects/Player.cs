@@ -11,7 +11,7 @@ namespace Minecraft.Source.Objects
 
         public override void Update(GameTime gameTime)
         {
-            if (Globals.GetPlayer() == this)
+            if (IsClientPlayer())
             {
                 Globals.GetCamera().SetCameraPos(_pos);
             }
