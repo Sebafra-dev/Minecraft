@@ -22,11 +22,28 @@ To achieve high framerates and avoid performance bottlenecks, I implemented and 
 
 ---
 
+## ➡️ Next Steps
+
+* **Breaking/Placing Blocks** Main gameplay features for a game inspired by Minecraft.
+* **Collision For Player** Basic collision system (probably AABB).
+* **Biomes and Weather** Generated world with Biomes using PerlinNoise.
+* **Further Optimizations**
+
+---
+
 ## 💻 Tech Stack
 
 * **Language:** C# (.NET)
-* **Graphics API / Library:** MonoGame Framework (https://monogame.net/)
+* **Graphics API / Library:** MonoGame Framework (DirectX12) (https://monogame.net/)
 * **Development Tools:** Visual Studio
+
+---
+
+## ⚙️ Testing Environment
+
+* **CPU:** Intel Core i7-13700F
+* **GPU:** NVIDIA RTX 3070 (8GB VRAM)
+* **RAM:** 32GB DDR4 (3600 MT/s)
 
 ---
 
