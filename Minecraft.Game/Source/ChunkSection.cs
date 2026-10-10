@@ -38,7 +38,7 @@ namespace Minecraft.Source
         {
             var graphicsDevice = Globals.GetGraphics().GraphicsDevice;
 
-            IndexCount = mesh.Indices.Count;
+            IndexCount = mesh.IndicesCount;
 
             VertexBuffer?.Dispose();
             IndexBuffer?.Dispose();
@@ -46,11 +46,11 @@ namespace Minecraft.Source
             if (IndexCount == 0)
                 return;
 
-            VertexBuffer = new VertexBuffer(graphicsDevice, VoxelVertex.VertexDeclaration, mesh.Vertices.Count, BufferUsage.WriteOnly);
-            IndexBuffer = new IndexBuffer(graphicsDevice, IndexElementSize.ThirtyTwoBits, mesh.Indices.Count, BufferUsage.WriteOnly);
+            VertexBuffer = new VertexBuffer(graphicsDevice, VoxelVertex.VertexDeclaration, mesh.VerticesCount, BufferUsage.WriteOnly);
+            IndexBuffer = new IndexBuffer(graphicsDevice, IndexElementSize.ThirtyTwoBits, mesh.IndicesCount, BufferUsage.WriteOnly);
 
-            VertexBuffer.SetData(mesh.Vertices.ToArray());
-            IndexBuffer.SetData(mesh.Indices.ToArray());
+            VertexBuffer.SetData(mesh.Vertices, 0, mesh.VerticesCount);
+            IndexBuffer.SetData(mesh.Indices, 0, mesh.IndicesCount);
         }
 
         private static int GetBlockIndex(int x, int y, int z) => x + (z << 4) + (y << 8);

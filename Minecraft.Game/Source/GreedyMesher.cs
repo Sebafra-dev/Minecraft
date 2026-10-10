@@ -2,7 +2,9 @@
 using Microsoft.Xna.Framework.Graphics.PackedVector;
 using Minecraft.Source.Objects;
 using Minecraft.Source.Structures;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using static Minecraft.Source.BlockProperties;
 
 namespace Minecraft.Source
@@ -11,8 +13,10 @@ namespace Minecraft.Source
     {
         public class MeshData
         {
-            public List<VoxelVertex> Vertices { get; } = [];
-            public List<int> Indices { get; } = [];
+            public VoxelVertex[] Vertices { get; set; } = [];
+            public int[] Indices { get; set; } = [];
+            public int VerticesCount { get; set; }
+            public int IndicesCount { get; set; }
         }
 
         private enum Face
@@ -301,9 +305,9 @@ namespace Minecraft.Source
             int globalY = chunkSectionIndex * ChunkSection.HEIGHT + y;
             int globalZ = chunkPos.Z * Chunk.DEPTH + z;
 
-            int vertexOffset = mesh.Vertices.Count; // 1
+            int vertexOffset = mesh.VerticesCount; // 1
 
-            mesh.Vertices.Add(new VoxelVertex
+            mesh.AddVertice(new VoxelVertex
             {
                 Position = new Vector3(
                     globalX,
@@ -313,7 +317,7 @@ namespace Minecraft.Source
                 Data = new((byte)atlasId, (byte)0, (byte)0, alpha)
             });
 
-            mesh.Vertices.Add(new VoxelVertex
+            mesh.AddVertice(new VoxelVertex
             {
                 Position = new Vector3(
                     globalX + 1,
@@ -323,7 +327,7 @@ namespace Minecraft.Source
                 Data = new((byte)atlasId, (byte)0, (byte)0, alpha)
             });
 
-            mesh.Vertices.Add(new VoxelVertex
+            mesh.AddVertice(new VoxelVertex
             {
                 Position = new Vector3(
                     globalX,
@@ -333,7 +337,7 @@ namespace Minecraft.Source
                 Data = new((byte)atlasId, (byte)0, (byte)0, alpha)
             });
 
-            mesh.Vertices.Add(new VoxelVertex
+            mesh.AddVertice(new VoxelVertex
             {
                 Position = new Vector3(
                     globalX + 1,
@@ -343,25 +347,25 @@ namespace Minecraft.Source
                 Data = new((byte)atlasId, (byte)0, (byte)0, alpha)
             });
 
-            mesh.Indices.Add(vertexOffset);
-            mesh.Indices.Add(vertexOffset + 1);
-            mesh.Indices.Add(vertexOffset + 2);
+            mesh.AddIndice(vertexOffset);
+            mesh.AddIndice(vertexOffset + 1);
+            mesh.AddIndice(vertexOffset + 2);
 
-            mesh.Indices.Add(vertexOffset + 1);
-            mesh.Indices.Add(vertexOffset + 3);
-            mesh.Indices.Add(vertexOffset + 2);
+            mesh.AddIndice(vertexOffset + 1);
+            mesh.AddIndice(vertexOffset + 3);
+            mesh.AddIndice(vertexOffset + 2);
 
-            mesh.Indices.Add(vertexOffset + 2);
-            mesh.Indices.Add(vertexOffset + 1);
-            mesh.Indices.Add(vertexOffset);
+            mesh.AddIndice(vertexOffset + 2);
+            mesh.AddIndice(vertexOffset + 1);
+            mesh.AddIndice(vertexOffset);
 
-            mesh.Indices.Add(vertexOffset + 2);
-            mesh.Indices.Add(vertexOffset + 3);
-            mesh.Indices.Add(vertexOffset + 1);
+            mesh.AddIndice(vertexOffset + 2);
+            mesh.AddIndice(vertexOffset + 3);
+            mesh.AddIndice(vertexOffset + 1);
 
-            vertexOffset = mesh.Vertices.Count; // 2
+            vertexOffset = mesh.VerticesCount; // 2
 
-            mesh.Vertices.Add(new VoxelVertex
+            mesh.AddVertice(new VoxelVertex
             {
                 Position = new Vector3(
                     globalX,
@@ -371,7 +375,7 @@ namespace Minecraft.Source
                 Data = new((byte)atlasId, (byte)0, (byte)0, alpha)
             });
 
-            mesh.Vertices.Add(new VoxelVertex
+            mesh.AddVertice(new VoxelVertex
             {
                 Position = new Vector3(
                     globalX + 1,
@@ -381,7 +385,7 @@ namespace Minecraft.Source
                 Data = new((byte)atlasId, (byte)0, (byte)0, alpha)
             });
 
-            mesh.Vertices.Add(new VoxelVertex
+            mesh.AddVertice(new VoxelVertex
             {
                 Position = new Vector3(
                     globalX,
@@ -391,7 +395,7 @@ namespace Minecraft.Source
                 Data = new((byte)atlasId, (byte)0, (byte)0, alpha)
             });
 
-            mesh.Vertices.Add(new VoxelVertex
+            mesh.AddVertice(new VoxelVertex
             {
                 Position = new Vector3(
                     globalX + 1,
@@ -401,21 +405,21 @@ namespace Minecraft.Source
                 Data = new((byte)atlasId, (byte)0, (byte)0, alpha)
             });
 
-            mesh.Indices.Add(vertexOffset);
-            mesh.Indices.Add(vertexOffset + 2);
-            mesh.Indices.Add(vertexOffset + 1);
+            mesh.AddIndice(vertexOffset);
+            mesh.AddIndice(vertexOffset + 2);
+            mesh.AddIndice(vertexOffset + 1);
 
-            mesh.Indices.Add(vertexOffset + 1);
-            mesh.Indices.Add(vertexOffset + 2);
-            mesh.Indices.Add(vertexOffset + 3);
+            mesh.AddIndice(vertexOffset + 1);
+            mesh.AddIndice(vertexOffset + 2);
+            mesh.AddIndice(vertexOffset + 3);
 
-            mesh.Indices.Add(vertexOffset + 1);
-            mesh.Indices.Add(vertexOffset + 2);
-            mesh.Indices.Add(vertexOffset);
+            mesh.AddIndice(vertexOffset + 1);
+            mesh.AddIndice(vertexOffset + 2);
+            mesh.AddIndice(vertexOffset);
 
-            mesh.Indices.Add(vertexOffset + 3);
-            mesh.Indices.Add(vertexOffset + 2);
-            mesh.Indices.Add(vertexOffset + 1);
+            mesh.AddIndice(vertexOffset + 3);
+            mesh.AddIndice(vertexOffset + 2);
+            mesh.AddIndice(vertexOffset + 1);
         }
 
         private static void AddQuad(Chunk chunk,
@@ -529,10 +533,9 @@ namespace Minecraft.Source
             var atlasId = face == Face.PlusY ? ids.Item1 : ids.Item2;
             var alpha = block.GetProperties().Alpha;
 
-            int vertexOffset = mesh.Vertices.Count;
+            int vertexOffset = mesh.VerticesCount;
 
-            mesh.Vertices.Add(
-                new VoxelVertex
+            mesh.AddVertice(new VoxelVertex
                 {
                     Position = a,
                     TileUV = new HalfVector2(width, height),
@@ -540,8 +543,7 @@ namespace Minecraft.Source
                 }
             );
 
-            mesh.Vertices.Add(
-                new VoxelVertex
+            mesh.AddVertice(new VoxelVertex
                 {
                     Position = b,
                     TileUV = new HalfVector2(0, height),
@@ -549,8 +551,7 @@ namespace Minecraft.Source
                 }
             );
 
-            mesh.Vertices.Add(
-                new VoxelVertex
+            mesh.AddVertice(new VoxelVertex
                 {
                     Position = c,
                     TileUV = new HalfVector2(0, 0),
@@ -558,8 +559,7 @@ namespace Minecraft.Source
                 }
             );
 
-            mesh.Vertices.Add(
-                new VoxelVertex
+            mesh.AddVertice(new VoxelVertex
                 {
                     Position = d,
                     TileUV = new HalfVector2(width, 0),
@@ -567,13 +567,41 @@ namespace Minecraft.Source
                 }
             );
 
-            mesh.Indices.Add(vertexOffset);
-            mesh.Indices.Add(vertexOffset + 2);
-            mesh.Indices.Add(vertexOffset + 1);
+            mesh.AddIndice(vertexOffset);
+            mesh.AddIndice(vertexOffset + 2);
+            mesh.AddIndice(vertexOffset + 1);
 
-            mesh.Indices.Add(vertexOffset);
-            mesh.Indices.Add(vertexOffset + 3);
-            mesh.Indices.Add(vertexOffset + 2);
+            mesh.AddIndice(vertexOffset);
+            mesh.AddIndice(vertexOffset + 3);
+            mesh.AddIndice(vertexOffset + 2);
+        }
+
+        private static void AddVertice(this MeshData mesh, VoxelVertex voxelVertex)
+        {
+            if (mesh.VerticesCount >= mesh.Vertices.Length)
+            {
+                var oldArr = mesh.Vertices;
+                int newSize = oldArr.Length == 0 ? 4 : oldArr.Length * 2;
+
+                mesh.Vertices = new VoxelVertex[newSize];
+                Array.Copy(oldArr, mesh.Vertices, mesh.VerticesCount);
+            }
+
+            mesh.Vertices[mesh.VerticesCount++] = voxelVertex;
+        }
+
+        private static void AddIndice(this MeshData mesh, int indice)
+        {
+            if (mesh.IndicesCount >= mesh.Indices.Length)
+            {
+                var oldArr = mesh.Indices;
+                int newSize = oldArr.Length == 0 ? 4 : oldArr.Length * 2;
+
+                mesh.Indices = new int[newSize];
+                Array.Copy(oldArr, mesh.Indices, mesh.IndicesCount);
+            }
+
+            mesh.Indices[mesh.IndicesCount++] = indice;
         }
     }
 }
