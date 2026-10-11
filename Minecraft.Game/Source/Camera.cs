@@ -21,14 +21,9 @@ namespace Minecraft.Source
         {
             var controlling = Globals.GetControlling();
 
-            Vector3 forward = Vector3.Transform(
-                Vector3.Forward,
-                Matrix.CreateFromYawPitchRoll(controlling.GetYaw(), controlling.GetPitch(), 0)
-            );
-
             _matrix = Matrix.CreateLookAt(
                 _cameraPosition,
-                _cameraPosition + forward,
+                _cameraPosition + controlling.Forward,
                 Vector3.Up
             );
 

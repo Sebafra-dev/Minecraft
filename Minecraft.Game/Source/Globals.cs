@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Minecraft.Source.Objects;
+using Minecraft.Source.Structures;
 using Minecraft.Source.UI;
 
 namespace Minecraft.Source
@@ -19,6 +20,8 @@ namespace Minecraft.Source
         private readonly static FastNoiseLite _noise = new(SEED);
         private static Effect _voxelEffect;
         private static Matrix _projection;
+        private static IntPosition? _selectedBlock;
+        private static IntPosition _selectedBlockNormal;
 
         public const int SEED = 1000;
         public const int SEC_TO_MS = 1000;
@@ -35,6 +38,8 @@ namespace Minecraft.Source
         public static FastNoiseLite GetNoise() => _noise;
         public static Effect GetEffect() => _voxelEffect;
         public static Matrix GetProjection() => _projection;
+        public static IntPosition? GetSelectedBlock() => _selectedBlock;
+        public static IntPosition GetSelectedBlockNormal() => _selectedBlockNormal;
 
         public static void SetGraphics(GraphicsDeviceManager graphics)
         {
@@ -89,6 +94,16 @@ namespace Minecraft.Source
         public static void SetProjection(Matrix projection)
         {
             _projection = projection;
+        }
+
+        public static void SetSelectedBlock(IntPosition? selectedBlock)
+        {
+            _selectedBlock = selectedBlock;
+        }
+
+        public static void SetSelectedBlockNormal(IntPosition selectedBlockNormal)
+        {
+            _selectedBlockNormal = selectedBlockNormal;
         }
     }
 }

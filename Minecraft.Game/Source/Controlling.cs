@@ -1,11 +1,16 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using Minecraft.Source.Structures;
+using System.Diagnostics;
+using static Minecraft.Source.BlockProperties;
 
 namespace Minecraft.Source
 {
     public class Controlling
     {
+        private MouseState _previousMouseState;
         private MouseState _mouseState;
+        private KeyboardState _previousKeyboardState;
         private KeyboardState _keyboardState;
 
         private float _yaw = 0f;
@@ -14,6 +19,8 @@ namespace Minecraft.Source
         private readonly float _moveSpeedNoClip = 30f;
         private readonly float _mouseSensitivity = 0.004f;
         public static bool NoClip = false;
+
+        public Vector3 Forward { get; private set; }
 
         public Controlling()
         {
@@ -26,26 +33,16 @@ namespace Minecraft.Source
         public float GetYaw() => _yaw;
         public float GetPitch() => _pitch;
 
-        public void Update(GameTime gameTime)
+        public bool IsMouseRightClick() => _previousMouseState.RightButton == ButtonState.Released && _mouseState.RightButton == ButtonState.Pressed;
+        public bool IsMouseLeftClick() => _previousMouseState.LeftButton == ButtonState.Released && _mouseState.LeftButton == ButtonState.Pressed;
+
+        private void PlayerMoveControlling(GameTime gameTime)
         {
-            if (!GameMain.Instance.IsActive)
-                return;
-
-            _mouseState = Mouse.GetState();
-            _keyboardState = Keyboard.GetState();
-
-            var graphicsDevice = Globals.GetGraphics().GraphicsDevice;
+            var player = Globals.GetPlayer();
             float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-            Vector3 forward = Vector3.Transform(
-                Vector3.Forward,
-                Matrix.CreateFromYawPitchRoll(_yaw, _pitch, 0)
-            );
-
-            Vector3 right = Vector3.Cross(forward, Vector3.Up);
+            Vector3 right = Vector3.Cross(Forward, Vector3.Up);
             right.Normalize();
-
-            var player = Globals.GetPlayer();
 
             var ctrl = _keyboardState.IsKeyDown(Keys.LeftControl);
             var shift = _keyboardState.IsKeyDown(Keys.LeftShift);
@@ -53,7 +50,7 @@ namespace Minecraft.Source
 
             if (NoClip)
             {
-                var f = forward * _moveSpeedNoClip * deltaTime * speedPerc;
+                var f = Forward * _moveSpeedNoClip * deltaTime * speedPerc;
                 var r = right * _moveSpeedNoClip * deltaTime * speedPerc;
 
                 if (_keyboardState.IsKeyDown(Keys.W))
@@ -104,9 +101,77 @@ namespace Minecraft.Source
                 if (_keyboardState.IsKeyDown(Keys.D))
                     player.Move(r);
             }
+        }
+
+        private void OnMouseLeftClick()
+        {
+            var selectedBlock = Globals.GetSelectedBlock();
+            if (selectedBlock == null)
+                return;
+
+            var map = Globals.GetMap();
+
+            var block = map.GetBlock(selectedBlock.Value);
+            if (block.GetProperties().Liquid)
+                return;
+
+            map.RemoveBlockOnMap(selectedBlock.Value);
+        }
+
+
+        private void OnMouseRightClick()
+        {
+            var selectedBlock = Globals.GetSelectedBlock();
+
+            if (selectedBlock == null)
+                return;
+
+            var map = Globals.GetMap();
+
+            var block = selectedBlock.Value;
+            var normal = Globals.GetSelectedBlockNormal();
+
+            var target = new IntPosition(
+                block.X + normal.X,
+                block.Y + normal.Y,
+                block.Z + normal.Z
+            );
+
+            if (map.IsBlock(target))
+                return;
+
+            map.AddBlockOnMap(BlockType.Dirt, target);
+        }
+
+
+        public void Update(GameTime gameTime)
+        {
+            if (!GameMain.Instance.IsActive)
+                return;
+
+            _previousMouseState = _mouseState;
+            _mouseState = Mouse.GetState();
+
+            _previousKeyboardState = _keyboardState;
+            _keyboardState = Keyboard.GetState();
+
+            var graphicsDevice = Globals.GetGraphics().GraphicsDevice;
+
+            Forward = Vector3.Transform(
+                Vector3.Forward,
+                Matrix.CreateFromYawPitchRoll(_yaw, _pitch, 0)
+            );
 
             if (_keyboardState.IsKeyDown(Keys.Escape))
                 GameMain.Instance.Exit();
+
+            PlayerMoveControlling(gameTime);
+
+            if (IsMouseLeftClick())
+                OnMouseLeftClick();
+
+            if (IsMouseRightClick())
+                OnMouseRightClick();
 
             int centerX = graphicsDevice.Viewport.Width / 2;
             int centerY = graphicsDevice.Viewport.Height / 2;

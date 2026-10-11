@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
 using Minecraft.Source.Objects;
 using Minecraft.Source.Structures;
+using static Minecraft.Source.BlockProperties;
 using static Minecraft.Source.GreedyMesher;
 
 namespace Minecraft.Source
@@ -58,6 +59,11 @@ namespace Minecraft.Source
         public Block GetBlock(int x, int y, int z)
         {
             return _blocks[GetBlockIndex(x, y, z)];
+        }
+
+        public void RemoveBlock(int x, int y, int z)
+        {
+            _blocks[GetBlockIndex(x, y, z)].SetBlockType(BlockType.Air);
         }
 
         public void SetBlock(int x, int y, int z, Block block)

@@ -1,6 +1,7 @@
 ﻿using Minecraft.Source.Objects;
 using Minecraft.Source.Structures;
 using System;
+using Windows.ApplicationModel.Store.Preview.InstallControl;
 using static Minecraft.Source.BlockProperties;
 using static Minecraft.Source.GreedyMesher;
 
@@ -105,7 +106,20 @@ namespace Minecraft.Source
             GetBlock(chunkX, chunkY, chunkZ).SetBlockType(blockType);
         }
 
-        public void AddBlockOnChunk(BlockType blockType, IntPosition position)
+        public void RemoveBlockOnChunk(IntPosition position, bool updateSection = false)
+        {
+            if (position.X >= _position.X * WIDTH + WIDTH || position.X < _position.X * WIDTH ||
+                position.Z >= _position.Z * DEPTH + DEPTH || position.Z < _position.Z * DEPTH)
+                return;
+
+            var (chunkX, chunkY, chunkZ) = (position.X.Mod(WIDTH), position.Y, position.Z.Mod(DEPTH));
+            if (!IsBlock(chunkX, chunkY, chunkZ))
+                return;
+
+            RemoveBlock(chunkX, chunkY, chunkZ, updateSection);
+        }
+
+        public void AddBlockOnChunk(BlockType blockType, IntPosition position, bool updateSection = false)
         {
             if (position.X >= _position.X * WIDTH + WIDTH || position.X < _position.X * WIDTH ||
                 position.Z >= _position.Z * DEPTH + DEPTH || position.Z < _position.Z * DEPTH)
@@ -115,7 +129,7 @@ namespace Minecraft.Source
             if (IsBlock(chunkX, chunkY, chunkZ))
                 return;
 
-            SetBlock(chunkX, chunkY, chunkZ, new Block(blockType));
+            SetBlock(chunkX, chunkY, chunkZ, new Block(blockType), updateSection);
         }
 
         private void SpawnTree(IntPosition startPos)
@@ -139,17 +153,22 @@ namespace Minecraft.Source
                 }
         }
 
+        private void RefreshChunkSectionMesh(ChunkSection chunkSection, int sectionIndex)
+        {
+            var mesh = Build(this, sectionIndex);
+
+            Globals.GetMap().AwaitingMeshData.Enqueue((chunkSection, mesh));
+        }
+
         public void RefreshMesh()
         {
-            for (int y = 0; y < ChunkSections.Length; y++)
+            for (int sectionIndex = 0; sectionIndex < ChunkSections.Length; sectionIndex++)
             {
-                var chunkSection = ChunkSections[y];
+                var chunkSection = ChunkSections[sectionIndex];
                 if (chunkSection == null)
                     continue;
 
-                var mesh = Build(this, y);
-
-                Globals.GetMap().AwaitingMeshData.Enqueue((chunkSection, mesh));
+                RefreshChunkSectionMesh(chunkSection, sectionIndex);
             }
         }
 
@@ -185,10 +204,9 @@ namespace Minecraft.Source
             _generated = true;
         }
 
-        public Block GetBlock(int x, int y, int z) 
+        private ChunkSection GetSection(int y)
         {
             int sectionIndex = y / ChunkSection.HEIGHT;
-            int localY = y % ChunkSection.HEIGHT;
 
             var section = ChunkSections[sectionIndex];
 
@@ -198,23 +216,42 @@ namespace Minecraft.Source
                 ChunkSections[sectionIndex] = section;
             }
 
-            return section.GetBlock(x, localY, z);
+            return section;
         }
 
-        private void SetBlock(int x, int y, int z, Block block)
+        public Block GetBlock(int x, int y, int z) 
         {
-            int sectionIndex = y / ChunkSection.HEIGHT;
             int localY = y % ChunkSection.HEIGHT;
 
-            var section = ChunkSections[sectionIndex];
+            return GetSection(y).GetBlock(x, localY, z);
+        }
 
-            if (section == null)
+        private void RemoveBlock(int x, int y, int z, bool updateSection)
+        {
+            int localY = y % ChunkSection.HEIGHT;
+            var section = GetSection(y);
+
+            section.RemoveBlock(x, localY, z);
+
+            if (updateSection) //TODO REFRESH ALSO CLOSE CHUNKS SECTIONS IF ON ANY BORDER OF CURRENT (0 or 15 on any dimension)
             {
-                section = new ChunkSection();
-                ChunkSections[sectionIndex] = section;
+                int sectionIndex = y / ChunkSection.HEIGHT;
+                RefreshChunkSectionMesh(section, sectionIndex);
             }
+        }
+
+        private void SetBlock(int x, int y, int z, Block block, bool updateSection)
+        {
+            int localY = y % ChunkSection.HEIGHT;
+            var section = GetSection(y);
 
             section.SetBlock(x, localY, z, block);
+
+            if (updateSection) //TODO REFRESH ALSO CLOSE CHUNKS SECTIONS IF ON ANY BORDER OF CURRENT (0 or 15 on any dimension)
+            {
+                int sectionIndex = y / ChunkSection.HEIGHT;
+                RefreshChunkSectionMesh(section, sectionIndex);
+            }
         }
     }
 }

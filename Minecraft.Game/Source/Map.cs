@@ -93,8 +93,19 @@ namespace Minecraft.Source
             if ((chunk = GetChunkOnPos(position)) == null)
                 return;
 
-            chunk.AddBlockOnChunk(blockType, position);
+            chunk.AddBlockOnChunk(blockType, position, true);
         }
+
+        public void RemoveBlockOnMap(IntPosition position)
+        {
+            Chunk chunk;
+            if ((chunk = GetChunkOnPos(position)) == null)
+                return;
+
+            chunk.RemoveBlockOnChunk(position, true);
+        }
+
+        public Block GetBlock(IntPosition intPosition) => GetBlock(intPosition.X, intPosition.Y, intPosition.Z);
 
         public Block GetBlock(int x, int y, int z)
         {
@@ -107,6 +118,8 @@ namespace Minecraft.Source
 
             return chunk.GetBlock(x.Mod(Chunk.WIDTH), y, z.Mod(Chunk.DEPTH));
         }
+
+        public bool IsBlock(IntPosition position, bool checkTransparent = false) => IsBlock(position.X, position.Y, position.Z, checkTransparent); 
 
         public bool IsBlock(int x, int y, int z, bool checkTransparent = false)
         {
