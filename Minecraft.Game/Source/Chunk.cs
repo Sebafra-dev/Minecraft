@@ -155,6 +155,9 @@ namespace Minecraft.Source
 
         private void RefreshChunkSectionMesh(ChunkSection chunkSection, int sectionIndex)
         {
+            if (chunkSection == null)
+                return;
+
             var mesh = Build(this, sectionIndex);
 
             Globals.GetMap().AwaitingMeshData.Enqueue((chunkSection, mesh));
@@ -233,10 +236,41 @@ namespace Minecraft.Source
 
             section.RemoveBlock(x, localY, z);
 
-            if (updateSection) //TODO REFRESH ALSO CLOSE CHUNKS SECTIONS IF ON ANY BORDER OF CURRENT (0 or 15 on any dimension)
+            if (updateSection)
             {
+                var map = Globals.GetMap();
                 int sectionIndex = y / ChunkSection.HEIGHT;
                 RefreshChunkSectionMesh(section, sectionIndex);
+
+                if (localY == 0 && sectionIndex > 0)
+                    RefreshChunkSectionMesh(ChunkSections[sectionIndex - 1], sectionIndex - 1);
+
+                if (localY == ChunkSection.HEIGHT - 1 && sectionIndex < HEIGHT / ChunkSection.HEIGHT - 2)
+                    RefreshChunkSectionMesh(ChunkSections[sectionIndex + 1], sectionIndex + 1);
+
+                if (x == 0)
+                {
+                    var chunk = map.GetChunkOnChunkPos(_position + new ChunkPosition(-1, 0));
+                    chunk.RefreshChunkSectionMesh(chunk.ChunkSections[sectionIndex], sectionIndex);
+                }
+
+                if (x == 15)
+                {
+                    var chunk = map.GetChunkOnChunkPos(_position + new ChunkPosition(1, 0));
+                    chunk.RefreshChunkSectionMesh(chunk.ChunkSections[sectionIndex], sectionIndex);
+                }
+
+                if (z == 0)
+                {
+                    var chunk = map.GetChunkOnChunkPos(_position + new ChunkPosition(0, -1));
+                    chunk.RefreshChunkSectionMesh(chunk.ChunkSections[sectionIndex], sectionIndex);
+                }
+
+                if (z == 15)
+                {
+                    var chunk = map.GetChunkOnChunkPos(_position + new ChunkPosition(0, 1));
+                    chunk.RefreshChunkSectionMesh(chunk.ChunkSections[sectionIndex], sectionIndex);
+                }
             }
         }
 
