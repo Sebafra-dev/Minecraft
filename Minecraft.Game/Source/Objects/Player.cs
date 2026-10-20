@@ -18,7 +18,7 @@ namespace Minecraft.Source.Objects
                 var controlling = Globals.GetControlling();
                 var map = Globals.GetMap();
 
-                Globals.GetCamera().SetCameraPos(_pos);
+                Globals.GetCamera().SetCameraPos(_pos + new Vector3(0, 1, 0));
 
                 Vector3 origin = _pos;
                 Vector3 direction = Vector3.Normalize(controlling.Forward);
@@ -28,7 +28,7 @@ namespace Minecraft.Source.Objects
                 Globals.SetSelectedBlock(null);
 
                 int x = (int)MathF.Floor(origin.X);
-                int y = (int)MathF.Floor(origin.Y);
+                int y = (int)MathF.Floor(origin.Y + 1);
                 int z = (int)MathF.Floor(origin.Z);
 
                 int stepX = Math.Sign(direction.X);
@@ -58,10 +58,12 @@ namespace Minecraft.Source.Objects
 
                 IntPosition normal = new(0, 0, 0);
                 float distance = 0;
+                Block block;
 
                 while (distance <= maxDistance)
                 {
-                    if (map.IsBlock(x, y, z))
+                    block = map.GetBlock(new(x, y, z));
+                    if (block.GetBlockType() != BlockProperties.BlockType.Air && !block.GetProperties().Liquid)
                     {
                         Globals.SetSelectedBlock(new IntPosition(x, y, z));
 

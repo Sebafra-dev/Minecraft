@@ -23,10 +23,22 @@ namespace Minecraft.Source
 
         public static float GetHashOnPosition(int x, int z)
         {
-            int hash = HashCode.Combine(x, z, Globals.SEED);
+            unchecked
+            {
+                uint hash = Globals.SEED;
 
-            uint uHash = (uint)hash;
-            return (float)uHash / uint.MaxValue;
+                hash ^= (uint)x * 374761393u;
+                hash = (hash << 13) | (hash >> 19);
+
+                hash ^= (uint)z * 668265263u;
+                hash *= 1274126177u;
+
+                hash ^= hash >> 16;
+                hash *= 2246822519u;
+                hash ^= hash >> 13;
+
+                return hash / (float)uint.MaxValue;
+            }
         }
     }
 }

@@ -16,7 +16,7 @@ namespace Minecraft
         private Camera _camera;
 
         public static GameMain Instance { get; private set; }
-        
+
         public GameMain()
         {
             Globals.SetGraphics(new GraphicsDeviceManager(this)

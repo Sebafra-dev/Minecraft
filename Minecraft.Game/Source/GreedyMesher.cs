@@ -3,8 +3,6 @@ using Microsoft.Xna.Framework.Graphics.PackedVector;
 using Minecraft.Source.Objects;
 using Minecraft.Source.Structures;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using static Minecraft.Source.BlockProperties;
 
 namespace Minecraft.Source
@@ -123,7 +121,7 @@ namespace Minecraft.Source
 
                         int index = v * width + u;
 
-                        if (!blockProperties.Visible || blockProperties.Object || 
+                        if (!blockProperties.Visible || blockProperties.Object ||
                             !IsFaceVisible(chunk, chunkSectionIndex, face, x, y, z))
                         {
                             mask[index] = default;
@@ -293,7 +291,7 @@ namespace Minecraft.Source
             };
         }
 
-        private static void AddObject(Chunk chunk, int chunkSectionIndex, MeshData mesh, Block block,  int x, int y, int z)
+        private static void AddObject(Chunk chunk, int chunkSectionIndex, MeshData mesh, Block block, int x, int y, int z)
         {
             var ids = block.GetAtlasIds();
             var atlasId = ids.Item2;
@@ -536,35 +534,35 @@ namespace Minecraft.Source
             int vertexOffset = mesh.VerticesCount;
 
             mesh.AddVertice(new VoxelVertex
-                {
-                    Position = a,
-                    TileUV = new HalfVector2(width, height),
-                    Data = new((byte)atlasId, (byte)0, (byte)0, alpha)
-                }
+            {
+                Position = a,
+                TileUV = new HalfVector2(width, height),
+                Data = new((byte)atlasId, (byte)0, (byte)0, alpha)
+            }
             );
 
             mesh.AddVertice(new VoxelVertex
-                {
-                    Position = b,
-                    TileUV = new HalfVector2(0, height),
-                    Data = new((byte)atlasId, (byte)0, (byte)0, alpha)
-                }
+            {
+                Position = b,
+                TileUV = new HalfVector2(0, height),
+                Data = new((byte)atlasId, (byte)0, (byte)0, alpha)
+            }
             );
 
             mesh.AddVertice(new VoxelVertex
-                {
-                    Position = c,
-                    TileUV = new HalfVector2(0, 0),
-                    Data = new((byte)atlasId, (byte)0, (byte)0, alpha)
-                }
+            {
+                Position = c,
+                TileUV = new HalfVector2(0, 0),
+                Data = new((byte)atlasId, (byte)0, (byte)0, alpha)
+            }
             );
 
             mesh.AddVertice(new VoxelVertex
-                {
-                    Position = d,
-                    TileUV = new HalfVector2(width, 0),
-                    Data = new((byte)atlasId, (byte)0, (byte)0, alpha)
-                }
+            {
+                Position = d,
+                TileUV = new HalfVector2(width, 0),
+                Data = new((byte)atlasId, (byte)0, (byte)0, alpha)
+            }
             );
 
             mesh.AddIndice(vertexOffset);

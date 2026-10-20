@@ -1,6 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
-using Minecraft.Source.Structures;
 using System.Diagnostics;
 using static Minecraft.Source.BlockProperties;
 
@@ -122,7 +121,6 @@ namespace Minecraft.Source
         private void OnMouseRightClick()
         {
             var selectedBlock = Globals.GetSelectedBlock();
-
             if (selectedBlock == null)
                 return;
 
@@ -131,11 +129,7 @@ namespace Minecraft.Source
             var block = selectedBlock.Value;
             var normal = Globals.GetSelectedBlockNormal();
 
-            var target = new IntPosition(
-                block.X + normal.X,
-                block.Y + normal.Y,
-                block.Z + normal.Z
-            );
+            var target = block + normal;
 
             if (map.IsBlock(target))
                 return;

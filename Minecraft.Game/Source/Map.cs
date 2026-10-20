@@ -27,6 +27,8 @@ namespace Minecraft.Source
 
         public ConcurrentQueue<(ChunkSection, GreedyMesher.MeshData)> AwaitingMeshData = [];
 
+        private readonly SelectedBlock _selectedBlock;
+
         public Map()
         {
             _chunks = [];
@@ -45,6 +47,8 @@ namespace Minecraft.Source
             noise.SetFrequency(0.005f);
             noise.SetFractalType(FastNoiseLite.FractalType.FBm);
             noise.SetFractalOctaves(4);
+
+            _selectedBlock = new SelectedBlock();
         }
 
         ~Map()
@@ -119,12 +123,12 @@ namespace Minecraft.Source
             return chunk.GetBlock(x.Mod(Chunk.WIDTH), y, z.Mod(Chunk.DEPTH));
         }
 
-        public bool IsBlock(IntPosition position, bool checkTransparent = false) => IsBlock(position.X, position.Y, position.Z, checkTransparent); 
+        public bool IsBlock(IntPosition position, bool checkTransparent = false) => IsBlock(position.X, position.Y, position.Z, checkTransparent);
 
         public bool IsBlock(int x, int y, int z, bool checkTransparent = false)
         {
             Chunk chunk;
-            if ((chunk = GetChunkOnPos(new IntPosition(x, y, z))) == null) 
+            if ((chunk = GetChunkOnPos(new IntPosition(x, y, z))) == null)
                 return false;
 
             return chunk.IsBlock(x.Mod(Chunk.WIDTH), y, z.Mod(Chunk.DEPTH), checkTransparent);
@@ -191,10 +195,10 @@ namespace Minecraft.Source
 
                 var generatedChunks = new HashSet<(ChunkPosition, Chunk)>();
 
-                foreach(var missingId in missingIds)
+                foreach (var missingId in missingIds)
                 {
                     Chunk chunk = null;
-                    foreach(var chunkId in _chunks.Keys)
+                    foreach (var chunkId in _chunks.Keys)
                     {
                         if (chunkIds.Contains(chunkId))
                             continue;
@@ -211,7 +215,8 @@ namespace Minecraft.Source
                 }
 
                 var generated = await Task.WhenAll(generatedChunks.Select(chunkData =>
-                    Task.Run(() => {
+                    Task.Run(() =>
+                    {
                         chunkData.Item2.ResetChunk(chunkData.Item1);
                         return (Id: chunkData.Item1, Chunk: chunkData.Item2);
                     })
@@ -245,7 +250,7 @@ namespace Minecraft.Source
                         chunk.SetActive();
                     }));
 
-                    if (tasks.Count >= 16) 
+                    if (tasks.Count >= 16)
                     {
                         await Task.WhenAll(tasks);
                         tasks.Clear();
@@ -263,7 +268,7 @@ namespace Minecraft.Source
             }
         }
 
-        public void Update(GameTime gameTime) 
+        public void Update(GameTime gameTime)
         {
             var pos = Globals.GetPlayer().GetPosition();
             var chunkPos = GetChunkIdFromPos(pos);
@@ -272,7 +277,7 @@ namespace Minecraft.Source
             {
                 meshData.Item1.UpdateMeshData(meshData.Item2);
             }
-            
+
             if (PreviousPlayerChunk == null || PreviousPlayerChunk != chunkPos)
             {
                 CreateChunks(pos);
@@ -283,6 +288,8 @@ namespace Minecraft.Source
             {
                 entity.Update(gameTime);
             }
+
+            _selectedBlock.Update();
         }
 
         public void Draw()
@@ -303,7 +310,7 @@ namespace Minecraft.Source
 
                 foreach (var chunk in visibleChunks)
                 {
-                    foreach(var chunkSection in chunk.ChunkSections)
+                    foreach (var chunkSection in chunk.ChunkSections)
                     {
                         if (chunkSection == null)
                             continue;
@@ -328,6 +335,8 @@ namespace Minecraft.Source
                     }
                 }
             }
+
+            _selectedBlock.Draw();
 
             Globals.GetHud().OnRenderData(_chunks.Count, visibleChunks.Count, vertices);
         }

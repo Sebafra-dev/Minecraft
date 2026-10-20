@@ -16,7 +16,7 @@ namespace Minecraft.Source.Structures
 
         public override readonly bool Equals([NotNullWhen(true)] object obj)
         {
-            if (obj is not ChunkPosition chunkPosition) 
+            if (obj is not ChunkPosition chunkPosition)
                 return false;
 
             return chunkPosition.X == X && chunkPosition.Z == Z;

@@ -4,8 +4,8 @@ namespace Minecraft.Source.Structures
 {
     public struct IntPosition
     {
-        public int X; 
-        public int Y; 
+        public int X;
+        public int Y;
         public int Z;
 
         public IntPosition(int x, int y, int z)

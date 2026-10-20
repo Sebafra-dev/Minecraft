@@ -38,8 +38,8 @@ public class BasicTests
 
     [Theory]
     [InlineData(
-        0, 0, 
-        0, 1, 
+        0, 0,
+        0, 1,
         0, 1)]
     [InlineData(
         0, 0,

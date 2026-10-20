@@ -35,7 +35,7 @@ namespace Minecraft.Source
             _blocks = new Block[WIDTH * HEIGHT * DEPTH];
         }
 
-        public void UpdateMeshData(MeshData mesh) 
+        public void UpdateMeshData(MeshData mesh)
         {
             var graphicsDevice = Globals.GetGraphics().GraphicsDevice;
 

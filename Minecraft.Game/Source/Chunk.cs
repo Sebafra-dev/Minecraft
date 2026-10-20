@@ -1,7 +1,6 @@
 ﻿using Minecraft.Source.Objects;
 using Minecraft.Source.Structures;
 using System;
-using Windows.ApplicationModel.Store.Preview.InstallControl;
 using static Minecraft.Source.BlockProperties;
 using static Minecraft.Source.GreedyMesher;
 
@@ -113,7 +112,7 @@ namespace Minecraft.Source
                 return;
 
             var (chunkX, chunkY, chunkZ) = (position.X.Mod(WIDTH), position.Y, position.Z.Mod(DEPTH));
-            if (!IsBlock(chunkX, chunkY, chunkZ))
+            if (!IsBlock(chunkX, chunkY, chunkZ, checkObject: false))
                 return;
 
             RemoveBlock(chunkX, chunkY, chunkZ, updateSection);
@@ -153,8 +152,9 @@ namespace Minecraft.Source
                 }
         }
 
-        private void RefreshChunkSectionMesh(ChunkSection chunkSection, int sectionIndex)
+        private void RefreshChunkSectionMesh(int sectionIndex)
         {
+            var chunkSection = GetSection(sectionIndex);
             if (chunkSection == null)
                 return;
 
@@ -171,11 +171,11 @@ namespace Minecraft.Source
                 if (chunkSection == null)
                     continue;
 
-                RefreshChunkSectionMesh(chunkSection, sectionIndex);
+                RefreshChunkSectionMesh(sectionIndex);
             }
         }
 
-        public bool IsBlock(int x, int y, int z, bool checkTransparent = false)
+        public bool IsBlock(int x, int y, int z, bool checkTransparent = false, bool checkObject = true)
         {
             if (y < 0 || y >= HEIGHT)
                 return false;
@@ -183,13 +183,13 @@ namespace Minecraft.Source
             var block = GetBlock(x, y, z);
             var blockProperties = block.GetProperties();
 
-            if (blockProperties.Object)
+            if (checkObject && blockProperties.Object)
                 return false;
 
             if (!blockProperties.Visible)
                 return false;
 
-            if (checkTransparent && blockProperties.Transparent) 
+            if (checkTransparent && blockProperties.Transparent)
                 return false;
 
             return true;
@@ -207,10 +207,8 @@ namespace Minecraft.Source
             _generated = true;
         }
 
-        private ChunkSection GetSection(int y)
+        private ChunkSection GetSection(int sectionIndex, bool create = false)
         {
-            int sectionIndex = y / ChunkSection.HEIGHT;
-
             var section = ChunkSections[sectionIndex];
 
             if (section == null)
@@ -222,69 +220,73 @@ namespace Minecraft.Source
             return section;
         }
 
-        public Block GetBlock(int x, int y, int z) 
+        private static int GetChunkSectionIdFromY(int y) => y / ChunkSection.HEIGHT;
+
+        public Block GetBlock(int x, int y, int z)
         {
             int localY = y % ChunkSection.HEIGHT;
 
-            return GetSection(y).GetBlock(x, localY, z);
+            return GetSection(GetChunkSectionIdFromY(y)).GetBlock(x, localY, z);
+        }
+
+        private void UpdateSection(int sectionIndex, int x, int localY, int z)
+        {
+            var map = Globals.GetMap();
+            RefreshChunkSectionMesh(sectionIndex);
+
+            if (localY == 0 && sectionIndex > 0)
+                RefreshChunkSectionMesh(sectionIndex - 1);
+
+            if (localY == ChunkSection.HEIGHT - 1 && sectionIndex < HEIGHT / ChunkSection.HEIGHT - 2)
+                RefreshChunkSectionMesh(sectionIndex + 1);
+
+            void refresh(ChunkPosition offset)
+            {
+                var chunk = map.GetChunkOnChunkPos(_position + offset);
+                if (chunk == null)
+                    return;
+
+                chunk.RefreshChunkSectionMesh(sectionIndex);
+            }
+
+            if (x == 0)
+                refresh(new(-1, 0));
+
+            if (x == 15)
+                refresh(new(1, 0));
+
+            if (z == 0)
+                refresh(new(0, -1));
+
+            if (z == 15)
+                refresh(new(0, 1));
         }
 
         private void RemoveBlock(int x, int y, int z, bool updateSection)
         {
             int localY = y % ChunkSection.HEIGHT;
-            var section = GetSection(y);
+            var sectionIndex = GetChunkSectionIdFromY(y);
+            var section = GetSection(sectionIndex);
 
             section.RemoveBlock(x, localY, z);
 
             if (updateSection)
             {
-                var map = Globals.GetMap();
-                int sectionIndex = y / ChunkSection.HEIGHT;
-                RefreshChunkSectionMesh(section, sectionIndex);
-
-                if (localY == 0 && sectionIndex > 0)
-                    RefreshChunkSectionMesh(ChunkSections[sectionIndex - 1], sectionIndex - 1);
-
-                if (localY == ChunkSection.HEIGHT - 1 && sectionIndex < HEIGHT / ChunkSection.HEIGHT - 2)
-                    RefreshChunkSectionMesh(ChunkSections[sectionIndex + 1], sectionIndex + 1);
-
-                if (x == 0)
-                {
-                    var chunk = map.GetChunkOnChunkPos(_position + new ChunkPosition(-1, 0));
-                    chunk.RefreshChunkSectionMesh(chunk.ChunkSections[sectionIndex], sectionIndex);
-                }
-
-                if (x == 15)
-                {
-                    var chunk = map.GetChunkOnChunkPos(_position + new ChunkPosition(1, 0));
-                    chunk.RefreshChunkSectionMesh(chunk.ChunkSections[sectionIndex], sectionIndex);
-                }
-
-                if (z == 0)
-                {
-                    var chunk = map.GetChunkOnChunkPos(_position + new ChunkPosition(0, -1));
-                    chunk.RefreshChunkSectionMesh(chunk.ChunkSections[sectionIndex], sectionIndex);
-                }
-
-                if (z == 15)
-                {
-                    var chunk = map.GetChunkOnChunkPos(_position + new ChunkPosition(0, 1));
-                    chunk.RefreshChunkSectionMesh(chunk.ChunkSections[sectionIndex], sectionIndex);
-                }
+                UpdateSection(sectionIndex, x, localY, z);
             }
         }
 
         private void SetBlock(int x, int y, int z, Block block, bool updateSection)
         {
             int localY = y % ChunkSection.HEIGHT;
-            var section = GetSection(y);
+            var sectionIndex = GetChunkSectionIdFromY(y);
+            var section = GetSection(sectionIndex);
 
             section.SetBlock(x, localY, z, block);
 
-            if (updateSection) //TODO REFRESH ALSO CLOSE CHUNKS SECTIONS IF ON ANY BORDER OF CURRENT (0 or 15 on any dimension)
+            if (updateSection)
             {
-                int sectionIndex = y / ChunkSection.HEIGHT;
-                RefreshChunkSectionMesh(section, sectionIndex);
+                UpdateSection(sectionIndex, x, localY, z);
             }
         }
     }

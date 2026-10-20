@@ -25,8 +25,9 @@ namespace Minecraft.Source
             Water
         }
 
-        public readonly static Dictionary<BlockType, BlockProperties> Blocks = new() {
-            [BlockType.Air] = new BlockProperties(visible: false, noCollision: true), 
+        public readonly static Dictionary<BlockType, BlockProperties> Blocks = new()
+        {
+            [BlockType.Air] = new BlockProperties(visible: false, noCollision: true),
             [BlockType.Grass] = new BlockProperties(),
             [BlockType.Dirt] = new BlockProperties(),
             [BlockType.Stone] = new BlockProperties(),

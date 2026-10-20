@@ -48,14 +48,14 @@ namespace Minecraft.Source.Objects
             var map = Globals.GetMap();
             float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-            var block = map.GetBlock((int)_pos.X, (int)(_pos.Y - _sizes.Y), (int)_pos.Z);
+            var block = map.GetBlock((int)(_pos.X - 0.5f), (int)(_pos.Y - 1 - 0.5f), (int)(_pos.Z - 0.5f));
             var cameraBlock = map.GetBlock((int)_pos.X, (int)_pos.Y, (int)_pos.Z);
 
             bool grounded = !block.GetProperties().NoCollision;
             bool inLiquid = cameraBlock.GetProperties().Liquid;
 
             //jump
-            if (IsClientPlayer() && (grounded || inLiquid) && 
+            if (IsClientPlayer() && (grounded || inLiquid) &&
                 Globals.GetControlling().GetKeyboardState().IsKeyDown(Keys.Space))
             {
                 const float jumpVelocity = 8f;

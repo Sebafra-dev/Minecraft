@@ -25,7 +25,7 @@ namespace Minecraft.Source.UI
 
         public void AddChild(UIElement child)
         {
-            if(!_childs.Add(child))
+            if (!_childs.Add(child))
             {
 #if DEBUG
                 Debug.WriteLine($"Cannot add child: {child.GetType()} to: {this.GetType()}");
